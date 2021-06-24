@@ -1,0 +1,10 @@
+#install.packages('rsconnect')
+library(rsconnect)
+
+setwd("C:/Users/hannesrosenbusch/Documents/introducing conjoint")
+
+rsconnect::setAccountInfo(name='rosenbusch',
+                          token='AE3BBCC32B976AD16AA02B48CC7236DA',
+                          secret='kBV5TmoWia6b4bk/kQGyy9sKghNVXz2f+3aBYiLx')
+
+rsconnect::deployApp('conjoint app')
