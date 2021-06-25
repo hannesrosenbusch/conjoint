@@ -1,4 +1,11 @@
-# Load R packages https://www.youtube.com/watch?v=tfN10IUX9Lo
+#TO DO LIST
+#
+#
+#
+#
+#
+
+
 library(shiny)
 library(shinythemes)
 library(conjoint)
@@ -264,7 +271,7 @@ server <- function(input, output) {
       set_plot[[3]]
     }, width =200, height = 300)
     
-    #Panel 4; 
+    #Panel 4; download single set (useful for set specific aethetics or pics)
     output$singleset <- downloadHandler(
       filename = function() {
         paste("Choice set", input$set_number, Sys.Date(),".tar", sep=" ")},
@@ -274,8 +281,6 @@ server <- function(input, output) {
         setwd(tmpdir)
         withProgress(message = 'Making images...', value = 0.5, {
           for(profile in c(1,2,3)){
-
-       
             if(profile == 1 & isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
             }else if(profile == 2 & isTruthy(input$imgprof2)){imagepath = input$imgprof2$datapath
             }else if(profile == 3 & isTruthy(input$imgprof3)){imagepath = input$imgprof3$datapath
@@ -290,6 +295,7 @@ server <- function(input, output) {
         tar(fname, fs)},
       contentType = "application/tar")
     
+    #Panel 4, download all sets
     output$data_file <- downloadHandler(
       filename = function() {
         paste("Choice sets", Sys.Date(),".tar", sep=" ")},
@@ -315,41 +321,45 @@ server <- function(input, output) {
         tar(fname, fs)},
       contentType = "application/tar")
     
-    
+    #Panel 5, boolean check if data was provided
     output$adminnames_provided <- reactive({
-      isTruthy(input$admindf) & isTruthy(input$keydf)
-    })
+      isTruthy(input$admindf) & isTruthy(input$keydf)})
     
+    #Panel 5; select columns from the admin dataframe
     output$columnselector = renderUI({
       admin = data.table::fread(input$admindf$datapath, data.table = FALSE)
       colnames(admin) = sapply(colnames(admin), function(x){substr(x, 1, min(12, nchar(x)))})
-      checkboxGroupInput("columns","Select columns containing profile choices",choices=colnames(admin),inline = T)
-    })
-
+      checkboxGroupInput("columns","Select columns containing profile choices",choices=colnames(admin),inline = T)})
+    
+    #Panel 5, carry out analysis and return plots, insights of interest
     analysis <- eventReactive(input$analysisstart, {
       withProgress(message = 'Analyzing...', value = 0.5, {
         key = data.table::fread(input$keydf$datapath, data.table = FALSE)
         admin = data.table::fread(input$admindf$datapath, data.table = FALSE)
         colnames(admin) = sapply(colnames(admin), function(x){substr(x, 1, min(12, nchar(x)))})
         admin = admin[, input$columns]
-        r = importance_utility_ranking(df = admin,key = key, nr_profiles = 3, none_option = FALSE)
-        r
-      })
-    })
+        r = importance_utility_ranking(df = admin,key = key, nr_profiles = 3, none_option = FALSE)})
+        r})
 
-    
+    #Panel 5; importance plot
     output$importanceplot = renderPlot({
       req(input$analysisstart)
       analysis()[[1]]})
+    
+    #Panel 5; utility plot
     output$utilityplot = renderPlot({
       req(input$analysisstart)
       analysis()[[2]]})
+    
+    #Panel 5; utility top ranking
     output$bestprofiles <- renderTable({head(analysis()[[3]], 7)})
+    
+    #Panel 5; utility bottom ranking
     output$worstprofiles <- renderTable({tail(analysis()[[3]], 7)})
 
-outputOptions(output, 'adminnames_provided', suspendWhenHidden = FALSE)
-  } # server
+    #only run when element is shown
+    outputOptions(output, 'adminnames_provided', suspendWhenHidden = FALSE)
 
+} #end  server
 
-# Create Shiny object
 shinyApp(ui = ui, server = server)
