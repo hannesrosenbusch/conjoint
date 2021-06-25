@@ -77,13 +77,17 @@ mix_match = function(pile1, third_pile = T){
 }
 
 
-plot_set = function(sets, set_number = 1, aest1, aest2, aest3){
+plot_set = function(sets, set_number = 1, aest1, aest2, aest3, imagepath){
 sets['Set'] = NULL
 colnames(sets) = gsub('_a', '', colnames(sets));colnames(sets) = gsub('_b', '', colnames(sets));colnames(sets) = gsub('_c', '', colnames(sets))
   
 elements1 = sets[set_number,1:(ncol(sets)/3)]
 elements1=elements1[,order(ncol(elements1):1)]
 colnames(elements1) = paste(colnames(elements1), ":", "")
+
+if(!is.na(imagepath)){jp = readJPEG(imagepath)
+                      g = rasterGrob(jp, interpolate=TRUE)
+}else{g = NA}
 
 set1 = ggplot() +  
   geom_text(aes(x = aest1['gap']/10, y = 1:ncol(elements1),
@@ -93,7 +97,10 @@ set1 = ggplot() +
   theme_bw()+ 
   scale_y_continuous(breaks = NULL, limits = c(-1*aest1['bottom_buffer'],ncol(elements1)+1+aest1['top_buffer'])) + 
   scale_x_continuous(breaks = NULL, limits = c( -0.6- aest1['left_buffer'],1 )) + 
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank())
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
+  {
+    if(!all(is.na(g))){annotation_custom(g, xmin=aest1['left_pic'], xmax=aest1['right_pic'], ymin=aest1['bottom_pic'], ymax=aest1['top_pic'])}
+  }
 
 elements2 = sets[set_number,((ncol(sets)/3)+1):(2*ncol(sets)/3)]
 colnames(elements2) = paste(colnames(elements2), ":", "")
@@ -107,7 +114,9 @@ set2 = ggplot() +
   theme_bw()+ 
   scale_y_continuous(breaks = NULL, limits = c(-1*aest2['bottom_buffer'],ncol(elements2)+1+aest2['top_buffer'])) + 
   scale_x_continuous(breaks = NULL, limits = c(-0.6-  aest2['left_buffer'],1)) + 
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank())
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank())  +{
+    if(!all(is.na(g))){annotation_custom(g, xmin=aest2['left_pic'], xmax=aest2['right_pic'], ymin=aest2['bottom_pic'], ymax=aest2['top_pic'])}
+  }
 
 elements3 = sets[set_number,((2*ncol(sets)/3) +1):ncol(sets)]
 colnames(elements3) = paste(colnames(elements3), ":", "")
@@ -121,7 +130,9 @@ set3 = ggplot() +
   theme_bw()+ 
   scale_y_continuous(breaks = NULL, limits = c(-1*aest3['bottom_buffer'],ncol(elements3)+1+aest3['top_buffer'])) + 
   scale_x_continuous(breaks = NULL, limits = c(-0.6-  aest3['left_buffer'],1)) + 
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank())
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) + {
+    if(!all(is.na(g))){annotation_custom(g, xmin=aest3['left_pic'], xmax=aest3['right_pic'], ymin=aest3['bottom_pic'], ymax=aest3['top_pic'])}
+  }
 list(set1,set2,set3)
 
 }
@@ -218,7 +229,6 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   options = list(none=FALSE, save=TRUE, keep=1)
   out = choicemodelr(long_df, xcoding, mcmc = mcmc, options = options)
   
-  print(dim(out$betadraw))
   #average across mcmc samples to obtain coefficients for each participant
   estbetas = apply(out$betadraw,c(1,2),mean) 
   # low_betas = apply(out$betadraw,c(1,2),function(x){quantile(x, 0.05)})
