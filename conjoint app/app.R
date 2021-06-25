@@ -1,5 +1,6 @@
 #TO DO LIST
-#
+
+#BETTER INSTRUCTIONS 
 #
 #
 #
