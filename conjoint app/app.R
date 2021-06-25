@@ -14,14 +14,17 @@ library(gridExtra)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("cerulean"),
+                
                 #navbarpage includes all tabpanels of the UI
                 navbarPage(
                     "Conjoint Analysis",
+                    
                     #Instruction panel
                     tabPanel("Instructions", "This online app is for research consultants of Appinio who want to run a study with a conjoint design.
                              On top of this page, you see the five required steps from Making Profiles to Analyzing Data.
                              Please always follow the steps in the right order, starting with 'Make profile subset' in step 1."
                              ),
+                    
                     #panel for user inputting attributes and levels
                     tabPanel("1. Make profiles", "In this step, you enter the attributes of the product on the left side in a comma separated list. An example is already filled in. 
                              Then you can enter the levels of each attribute below (notice commas vs semicolons in example). Please stick with attributes/levels resulting in matrices not bigger than 5x4 or 4x5. Verify your inputs on the right and click that button, friend. ",
@@ -37,6 +40,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                tableOutput("table2")
                                       ) 
                             ),
+                    
                     #panel for inspecting the choice sets
                     tabPanel("2. Make sets", "If you clicked on 'Make profile subset' in the previous step, the profile sets should appear here automatically. A profile set is a group of multiple (often three) profiles of which participants select one. Below, you see these profiles next to each other with one row containing all the information for one choice set.
                              In the next step, you can design the choice sets for the participants.", 
@@ -45,6 +49,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                tableOutput("table3")
                                       ),
                             ),
+                    
                     #panel for making the image stimuli for the admin
                     #Aesthetics input very awkward still
                     tabPanel("3. Make images", "Here you can alter the format of all the choice sets simultaneously and download them in a compressed folder. You can also download individual sets if they require unique formatting.",
