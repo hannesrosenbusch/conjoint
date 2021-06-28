@@ -6,7 +6,7 @@
 #
 #
 
-
+library(jpeg)
 library(shiny)
 library(shinythemes)
 library(conjoint)
