@@ -77,7 +77,7 @@ mix_match = function(pile1, third_pile = T){
 }
 
 
-plot_set = function(sets, set_number = 1, aest1, aest2, aest3, imagepath){
+plot_set = function(sets, set_number = 1, aest1, aest2, aest3, imagepath, none_text){
 sets['Set'] = NULL
 colnames(sets) = gsub('_a', '', colnames(sets));colnames(sets) = gsub('_b', '', colnames(sets));colnames(sets) = gsub('_c', '', colnames(sets))
   
@@ -133,7 +133,17 @@ set3 = ggplot() +
   theme(axis.title.x = element_blank(), axis.title.y = element_blank()) + {
     if(!all(is.na(g))){annotation_custom(g, xmin=aest3['left_pic'], xmax=aest3['right_pic'], ymin=aest3['bottom_pic'], ymax=aest3['top_pic'])}
   }
-list(set1,set2,set3)
+
+
+none_plot = ggplot() +  
+  geom_text(aes(x = 0, y = 2, 
+                label = none_text, fontface = "bold"), size = aest1['font_size_vals']) +
+  theme_bw()+ 
+  scale_y_continuous(breaks = NULL, limits = c(0,4)) + 
+  scale_x_continuous(breaks = NULL, limits = c(-1,1)) + 
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) 
+
+list(set1,set2,set3, none_plot)
 
 }
 
@@ -226,7 +236,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   long_df = as.matrix(long_df)
   xcoding = rep(0, nr_attributes)
   mcmc = list(R = 4000, use = 3500) 
-  options = list(none=FALSE, save=TRUE, keep=1)
+  options = list(none=none_option, save=TRUE, keep=1)
   out = choicemodelr(long_df, xcoding, mcmc = mcmc, options = options)
   
   #average across mcmc samples to obtain coefficients for each participant

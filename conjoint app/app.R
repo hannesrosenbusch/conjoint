@@ -7,8 +7,10 @@
 #
 
 library(jpeg)
+library(grid)
 library(shiny)
 library(shinythemes)
+library(shinyWidgets)
 library(conjoint)
 library(ggplot2)
 library(gridExtra)
@@ -63,6 +65,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                fileInput(inputId = "imgprof3", label = "Image profile C", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
                                
                                #aesthetics
+                               textAreaInput("none_text", "'None' text", "None of these"),
+                               
                                textInput("bottom_pic1", "Picture bottom 1", "2"),
                                textInput("left_pic1", "Picture left 1", "-Inf"),
                                textInput("right_pic1", "Picture right 1", "Inf"),
@@ -97,12 +101,11 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                              
                              #main panel for displaying the stimuli
                              mainPanel(
-                               h4("Choice set images"),
-                               textInput("set_number", "Choice set", "1"),
-                               splitLayout(cellWidths = c("33%", "33%", "33%"), plotOutput("plot1"),plotOutput("plot2"),plotOutput("plot3")),
-                               downloadButton('downloadData2', 'First: Download codes', class = "btn-primary"),
-                               downloadButton(outputId = "data_file", label = "Second: Download sets"),
-                               downloadButton(outputId = "singleset", label = "Optional: Download current set")
+                               #h4("Choice set images"),
+                               splitLayout(cellWidths = c("25%", "25%", "25%","25%"), plotOutput("plot1"),plotOutput("plot2"),plotOutput("plot3"),plotOutput("none_plot")),
+                               splitLayout(cellWidths = c("75%", "25%"), textInput("set_number", "Choice set", "1"), switchInput("incl_none", label = "'None' option")),
+                               downloadButton(outputId = "data_file", label = "Download sets"),
+                               downloadButton(outputId = "singleset", label = "Download current set")
                                       )
                              ),
                     #simple reminder panel that the actual data is collected in the admin
@@ -210,13 +213,6 @@ server <- function(input, output) {
       sets()
     })
 
-    #Panel 4; download choice sets AKA the analysis codes
-    output$downloadData2 <- downloadHandler(
-      filename = function() { 
-        paste("choice sets-", Sys.Date(), ".csv", sep="")},
-      content = function(file) {
-        write.csv(sets(), file, row.names = F)})
-    
     #Panel 4; collect chosen aesthetics
     aests = reactive({aest1 = c("font_size_vals" = as.integer(input$font_size_vals1), 
                                 "font_size_keys" = as.integer(input$font_size_keys1),
@@ -255,8 +251,9 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
       }else{imagepath = NA}
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath)
-        set_plot[[1]]
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
+
+      set_plot[[1]]
       }, width =200, height = 300)
     
     #Panel 4; plot profile B
@@ -264,7 +261,7 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof2)){imagepath = input$imgprof2$datapath
       }else{imagepath = NA}
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath)
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
       set_plot[[2]]
     }, width =200, height = 300)
     
@@ -273,8 +270,17 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof3)){imagepath = input$imgprof3$datapath
       }else{imagepath = NA}
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath)
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
       set_plot[[3]]
+    }, width =200, height = 300)
+    
+    #Panel 4; none plot
+    output$none_plot = renderPlot({
+      if(!input$incl_none){return(NULL)}
+      imagepath = NA
+      s = sets()
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
+      set_plot[[4]]
     }, width =200, height = 300)
     
     #Panel 4; download single set (useful for set specific aethetics or pics)
@@ -286,6 +292,21 @@ server <- function(input, output) {
         tmpdir <- tempdir()
         setwd(tmpdir)
         withProgress(message = 'Making images...', value = 0.5, {
+          
+          path = "ANALYSES CODES DO NOT DELETE.csv"
+          fs <- c(fs, path)
+          s = sets()
+          write.csv(s, path, row.names = F)
+          
+          
+          
+          if(input$incl_none){
+            path <- "none.png"
+            fs <- c(fs, path)
+            p = plot_set(s, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text)[[4]]  
+            ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = 700)
+          }
+          
           for(profile in c(1,2,3)){
             if(profile == 1 & isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
             }else if(profile == 2 & isTruthy(input$imgprof2)){imagepath = input$imgprof2$datapath
@@ -295,7 +316,7 @@ server <- function(input, output) {
             path <- paste(input$set_number, letters[profile], ".png", sep="")
             fs <- c(fs, path)
             s = sets()
-            p = plot_set(s, as.numeric(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath)[[profile]]  
+            p = plot_set(s, as.numeric(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)[[profile]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = 700)
           }})
         tar(fname, fs)},
@@ -310,20 +331,36 @@ server <- function(input, output) {
         tmpdir <- tempdir()
         setwd(tmpdir)
         withProgress(message = 'Making images...', value = 0.5, {
+          
+          path = "ANALYSES CODES DO NOT DELETE.csv"
+          fs <- c(fs, path)
+          s = sets()
+          write.csv(s, path, row.names = F)
+          
+          if(input$incl_none){
+            path <- paste("none.png")
+            fs <- c(fs, path)
+            s = sets()
+            p = plot_set(s, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text)[[4]]  
+            ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = 700)
+          }
+          
+          
           for(set_number in 1:nrow(sets())) {
             for(profile in c(1,2,3)){
-            
               if(profile == 1 & isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
               }else if(profile == 2 & isTruthy(input$imgprof2)){imagepath = input$imgprof2$datapath
               }else if(profile == 3 & isTruthy(input$imgprof3)){imagepath = input$imgprof3$datapath
               }else{imagepath = NA}  
-              
-            path <- paste(set_number, letters[profile], ".png", sep="")
-            fs <- c(fs, path)
-            s = sets()
-            p = plot_set(s, set_number, aests()[[1]], aests()[[2]], aests()[[3]], imagepath)[[profile]]  
-            ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = 700)}}
+              path <- paste(set_number, letters[profile], ".png", sep="")
+              fs <- c(fs, path)
+              s = sets()
+              p = plot_set(s, set_number, aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)[[profile]]  
+              ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = 700)}}
         })
+        
+
+        
         tar(fname, fs)},
       contentType = "application/tar")
     
