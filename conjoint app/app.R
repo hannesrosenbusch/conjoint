@@ -296,9 +296,12 @@ server <- function(input, output) {
           path = "ANALYSES CODES DO NOT DELETE.csv"
           fs <- c(fs, path)
           s = sets()
+          if(input$incl_none){
+            attr_names = colnames(s)[grepl("_a", colnames(s))]
+            new_col_names = gsub("_a", "_d",attr_names)
+            s[new_col_names] = "None"
+          }
           write.csv(s, path, row.names = F)
-          
-          
           
           if(input$incl_none){
             path <- "none.png"
@@ -335,6 +338,11 @@ server <- function(input, output) {
           path = "ANALYSES CODES DO NOT DELETE.csv"
           fs <- c(fs, path)
           s = sets()
+          if(input$incl_none){
+            attr_names = colnames(s)[grepl("_a", colnames(s))]
+            new_col_names = gsub("_a", "_d",attr_names)
+            s[new_col_names] = "None"
+          }
           write.csv(s, path, row.names = F)
           
           if(input$incl_none){
@@ -344,8 +352,6 @@ server <- function(input, output) {
             p = plot_set(s, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text)[[4]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = 700)
           }
-          
-          
           for(set_number in 1:nrow(sets())) {
             for(profile in c(1,2,3)){
               if(profile == 1 & isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
@@ -358,8 +364,6 @@ server <- function(input, output) {
               p = plot_set(s, set_number, aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)[[profile]]  
               ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = 700)}}
         })
-        
-
         
         tar(fname, fs)},
       contentType = "application/tar")
