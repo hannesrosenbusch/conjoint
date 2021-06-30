@@ -31,6 +31,7 @@ resample_without_creating_duplicates = function(piles, three = T){
   return(randomized_piles)
 }
 
+
 mix_match = function(pile1, third_pile = T){
   pile1[] <- lapply(pile1, as.character)
   #make pile2
@@ -85,8 +86,14 @@ elements1 = sets[set_number,1:(ncol(sets)/3)]
 elements1=elements1[,order(ncol(elements1):1)]
 colnames(elements1) = paste(colnames(elements1), ":", "")
 
-if(!is.na(imagepath)){jp = readJPEG(imagepath)
-                      g = rasterGrob(jp, interpolate=TRUE)
+if(!is.na(imagepath)){
+ if(substr(imagepath, nchar(imagepath)-3, nchar(imagepath)) == ".png"){
+   pn = readPNG(imagepath)
+   g = rasterGrob(pn, interpolate=TRUE)
+ }else if(substr(imagepath, nchar(imagepath)-3, nchar(imagepath)) == ".jpg" | substr(imagepath, nchar(imagepath)-4, nchar(imagepath)) == ".jpeg"){
+  jp = readJPEG(imagepath)
+  g = rasterGrob(jp, interpolate=TRUE)
+ }else{stop("weird input format")}
 }else{g = NA}
 
 set1 = ggplot() +  
@@ -160,8 +167,6 @@ get_a_png_plot <- function(sets, set_number, aest1, aest2, aest3, profile){
 
 }
 
-
-#https://rdrr.io/cran/ChoiceModelR/man/choicemodelr.html  R = total number of iterations of the Markov chain Monte Carlo use = the number of iterations to be used in parameter estimation
 
 importance_utility_ranking = function(df, key, nr_profiles, none_option){
   library(ChoiceModelR)
