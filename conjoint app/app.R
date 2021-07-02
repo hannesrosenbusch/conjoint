@@ -1,18 +1,14 @@
 #TO DO LIST
-#image_labels -- done
-#PNG in ADDITION TO JPG -- done
-#dpi variable for lower resolutuon pics -- done
-#BETTER/COMPREHENSIVE INSTRUCTIONS  -- done
 
-#COMBAT CODE REDUNDANCIES
-#BETTER AESTHETICS
+#BETTER INSTRUCTIONS 
+#
+#
+#
+#
 
-library(jpeg)
-library(png)
-library(grid)
+
 library(shiny)
 library(shinythemes)
-library(shinyWidgets)
 library(conjoint)
 library(ggplot2)
 library(gridExtra)
@@ -27,14 +23,12 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     #Instruction panel
                     tabPanel("Instructions", "This online app is for research consultants of Appinio who want to run a study with a conjoint design.
                              On top of this page, you see the five required steps from Making Profiles to Analyzing Data.
-                             Please always follow the steps in the right order, starting with 'Make profile subset' in step 1. 
-                             If you have questions, contact Hannes on Slack."
+                             Please always follow the steps in the right order, starting with 'Make profile subset' in step 1."
                              ),
                     
                     #panel for user inputting attributes and levels
                     tabPanel("1. Make profiles", "In this step, you enter the attributes of the product on the left side in a comma separated list. An example is already filled in. 
                              Then you can enter the levels of each attribute below (notice commas vs semicolons in example). Please stick with attributes/levels resulting in matrices not bigger than 5x4 or 4x5. Verify your inputs on the right and click that button, friend. ",
-                             tags$br(),
                              sidebarPanel(
                                tags$h3("Input:"),
                                textInput("txt1", "Names of attributes:", "Geschmack,  Behaelter, Preis, Streusel"),
@@ -43,7 +37,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                              mainPanel(
                                h4("Chosen attributes and levels"),
                                tableOutput("table"),
-                               actionButton("some", "Make profile subset"),
+                               actionButton("some", "Make profile subset"),downloadButton('downloadData', 'Download profiles'),
                                tableOutput("table2")
                                       ) 
                             ),
@@ -59,28 +53,16 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     
                     #panel for making the image stimuli for the admin
                     #Aesthetics input very awkward still
-                    tabPanel("3. Make images", "Here you can alter the format of all the choice sets simultaneously and download them in a compressed folder. 
-                             You can also download individual sets if they require unique formatting. 
-                             The download of sets will include a csv file with the analysis codes that will be required in step 5.",
-                             tags$br(),
-                             "SPECIAL ATTENTION WHEN ADDING IMAGES! If the image choice is an additional attribute that you want to test, which is not determined by the text attributes you added before, please always add the same image on the left, on the right etc. (it is done so by default). 
-                             Also add a textual tag for each image (e.g., by writing Logo1 in the field Image A Tag, Logo2 in the field Image B Tag etc.).
-                             However, if the picture is logically determined by the text attributes (e.g., it says 'Breed: Poodle' in the profile, so you have to show an image of a Poodle for this profile), then add the images individually for each choice set and downlaod the individual choice sets. Leave the image tag fields empty in this case.",
-                             tags$br(),
-                             sidebarPanel(
+                    tabPanel("3. Make images", "Here you can alter the format of all the choice sets simultaneously and download them in a compressed folder. You can also download individual sets if they require unique formatting.",
+                             sidebarPanel(style = "position: left; height: 600px; overflow-y: scroll",
                                tags$h4("Aesthetics:"),
                                
                                #optional images
                                fileInput(inputId = "imgprof1", label = "Image profile A", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-                               textInput("label_pic1", "Image A tag", ""),
                                fileInput(inputId = "imgprof2", label = "Image profile B", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-                               textInput("label_pic2", "Image B tag", ""),
                                fileInput(inputId = "imgprof3", label = "Image profile C", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-                               textInput("label_pic3", "Image C tag", ""),
                                
                                #aesthetics
-                               textAreaInput("none_text", "'None' text", "None of these"),
-                               
                                textInput("bottom_pic1", "Picture bottom 1", "2"),
                                textInput("left_pic1", "Picture left 1", "-Inf"),
                                textInput("right_pic1", "Picture right 1", "Inf"),
@@ -111,23 +93,22 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                textInput("gap1", "Gap 1", "0"),
                                textInput("gap2", "Gap 2", "0"),
                                textInput("gap3", "Gap 3", "0"),
-                               textInput("resolut", "Resolution of output (dpi)", "700"),
                                       ),
                              
                              #main panel for displaying the stimuli
                              mainPanel(
-                               #h4("Choice set images"),
-                               splitLayout(cellWidths = c("25%", "25%", "25%","25%"), plotOutput("plot1"),plotOutput("plot2"),plotOutput("plot3"),plotOutput("none_plot")),
-                               splitLayout(cellWidths = c("75%", "25%"), textInput("set_number", "Choice set", "1"), switchInput("incl_none", label = "'None' option")),
-                               downloadButton(outputId = "data_file", label = "Download sets"),
-                               downloadButton(outputId = "singleset", label = "Download current set")
+                               h4("Choice set images"),
+#                               textInput("set_number", "Choice set", "1"),
+                               splitLayout(cellWidths = c("33%", "33%", "33%"), plotOutput("plot1"),plotOutput("plot2"),plotOutput("plot3")),
+                               textInput("set_number", "Choice set", "1"),
+                               downloadButton('downloadData2', 'First: Download codes', class = "btn-primary"),
+                               downloadButton(outputId = "data_file", label = "Second: Download sets"),
+                               downloadButton(outputId = "singleset", label = "Optional: Download current set")
                                       )
                              ),
                     #simple reminder panel that the actual data is collected in the admin
-                    tabPanel("4. Collect data", "This step does not happen in this web app. You have to upload the generated images to the panel through the admin.
-                            Use the question type 'Picture Gallery' and input the images 1A, 1B, 1C (and maybe the 'none' option) to the first question. In the answer options next to the images simply repeat the filename of the respective image (1A, 1B, 1C, and None).
-                            This is important for the automatic data analysis in the next step. When you finished programming the study in the admin, please contact Hannes on Slack for a quick check. We will abandon this safety check once we are sure that conjoint analyses and this web app work smoothly.
-                             Once all participants made their choices within the individual choice sets, you can reupload the data in Step 5."),
+                    tabPanel("4. Collect data", "This step does not happen in this web app. You have to upload the generated images to the panel (through the admin).
+                             Once all participants made their choices within the individual sets, you can reupload the data in Step 5."),
                     
                     #panel for uploading the data and receiving analysis outputs
                     tabPanel("5. Analyze data",
@@ -208,6 +189,13 @@ server <- function(input, output) {
     Profile = 1:nrow(orth())
     cbind(Profile, orth())})
   
+  #Panel 2; download orthogonal profiles
+  output$downloadData <- downloadHandler(
+    filename = function() { 
+      paste("profiles-", Sys.Date(), ".csv", sep="")},
+    content = function(file) {
+      write.csv(orth(), file, row.names = F)})
+  
   #Panel 2-3; creates choice sets
   sets = eventReactive(input$some, {
     piles = mix_match(orth())
@@ -223,6 +211,13 @@ server <- function(input, output) {
       sets()
     })
 
+    #Panel 4; download choice sets AKA the analysis codes
+    output$downloadData2 <- downloadHandler(
+      filename = function() { 
+        paste("choice sets-", Sys.Date(), ".csv", sep="")},
+      content = function(file) {
+        write.csv(sets(), file, row.names = F)})
+    
     #Panel 4; collect chosen aesthetics
     aests = reactive({aest1 = c("font_size_vals" = as.integer(input$font_size_vals1), 
                                 "font_size_keys" = as.integer(input$font_size_keys1),
@@ -261,8 +256,8 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
       }else{imagepath = NA}
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
-      set_plot[[1]]
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath)
+        set_plot[[1]]
       }, width =200, height = 300)
     
     #Panel 4; plot profile B
@@ -270,7 +265,7 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof2)){imagepath = input$imgprof2$datapath
       }else{imagepath = NA}
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath)
       set_plot[[2]]
     }, width =200, height = 300)
     
@@ -279,17 +274,8 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof3)){imagepath = input$imgprof3$datapath
       }else{imagepath = NA}
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath)
       set_plot[[3]]
-    }, width =200, height = 300)
-    
-    #Panel 4; none plot
-    output$none_plot = renderPlot({
-      if(!input$incl_none){return(NULL)}
-      imagepath = NA
-      s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
-      set_plot[[4]]
     }, width =200, height = 300)
     
     #Panel 4; download single set (useful for set specific aethetics or pics)
@@ -300,24 +286,7 @@ server <- function(input, output) {
         fs <- c()
         tmpdir <- tempdir()
         setwd(tmpdir)
-        s = sets()
         withProgress(message = 'Making images...', value = 0.5, {
-          if(input$incl_none){
-            attr_names = colnames(s)[grepl("_a", colnames(s))]
-            new_col_names = gsub("_a", "_d",attr_names)
-            s[new_col_names] = "None"
-            path <- "none.png"
-            fs <- c(fs, path)
-            p = plot_set(s, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text)[[4]]  
-            ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
-          }
-          path = "ANALYSES CODES DO NOT DELETE.csv"
-          fs <- c(fs, path)
-          imgcols = c("Image_A", "Image_B", "Image_C")
-          s[imgcols] = cbind(input$label_pic1, input$label_pic2, input$label_pic3)
-          write.csv(s, path, row.names = F)
-
-          #super ugly, try pasting profile to variable name
           for(profile in c(1,2,3)){
             if(profile == 1 & isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
             }else if(profile == 2 & isTruthy(input$imgprof2)){imagepath = input$imgprof2$datapath
@@ -327,8 +296,8 @@ server <- function(input, output) {
             path <- paste(input$set_number, letters[profile], ".png", sep="")
             fs <- c(fs, path)
             s = sets()
-            p = plot_set(s, as.numeric(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)[[profile]]  
-            ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
+            p = plot_set(s, as.numeric(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath)[[profile]]  
+            ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = 700)
           }})
         tar(fname, fs)},
       contentType = "application/tar")
@@ -341,36 +310,21 @@ server <- function(input, output) {
         fs <- c()
         tmpdir <- tempdir()
         setwd(tmpdir)
-        s = sets()
         withProgress(message = 'Making images...', value = 0.5, {
-          if(input$incl_none){
-            attr_names = colnames(s)[grepl("_a", colnames(s))]
-            new_col_names = gsub("_a", "_d",attr_names)
-            s[new_col_names] = "None"
-            path <- "none.png"
-            fs <- c(fs, path)
-            p = plot_set(s, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text)[[4]]  
-            ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
-          }
-          path = "ANALYSES CODES DO NOT DELETE.csv"
-          fs <- c(fs, path)
-          imgcols = c("Image_A", "Image_B", "Image_C")
-          s[imgcols] = cbind(rep(input$label_pic1, nrow(s)), rep(input$label_pic2, nrow(s)), rep(input$label_pic3, nrow(s)))
-          write.csv(s, path, row.names = F)
-          
           for(set_number in 1:nrow(sets())) {
             for(profile in c(1,2,3)){
+            
               if(profile == 1 & isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
               }else if(profile == 2 & isTruthy(input$imgprof2)){imagepath = input$imgprof2$datapath
               }else if(profile == 3 & isTruthy(input$imgprof3)){imagepath = input$imgprof3$datapath
               }else{imagepath = NA}  
-              path <- paste(set_number, letters[profile], ".png", sep="")
-              fs <- c(fs, path)
-              s = sets()
-              p = plot_set(s, set_number, aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)[[profile]]  
-              ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))}}
+              
+            path <- paste(set_number, letters[profile], ".png", sep="")
+            fs <- c(fs, path)
+            s = sets()
+            p = plot_set(s, set_number, aests()[[1]], aests()[[2]], aests()[[3]], imagepath)[[profile]]  
+            ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = 700)}}
         })
-        
         tar(fname, fs)},
       contentType = "application/tar")
     
