@@ -2,9 +2,9 @@
 #image_labels -- done
 #PNG in ADDITION TO JPG -- done
 #dpi variable for lower resolutuon pics -- done
-#insert images as attributes in step 1 -- done
-#plot_set to plot_profile  -- done
 #BETTER/COMPREHENSIVE INSTRUCTIONS  -- done
+
+#COMBAT CODE REDUNDANCIES
 #BETTER AESTHETICS
 
 library(jpeg)
@@ -39,30 +39,11 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                tags$h3("Input:"),
                                textInput("txt1", "Names of attributes:", "Geschmack,  Behaelter, Preis, Streusel"),
                                textAreaInput(inputId = "txt2",  label = "Names of levels:", value = "Schokolade, Spinat, Erdbeere, Vanille;Plastikbecher, Pappbecher, Waffel; 0.50, 1, 2, 3;Mit, Ohne"),
-                               actionButton("testimages", "Test images"),
-                               actionButton("some", "Make profile subset", class = "btn-primary"),
-                               tags$br(),
-                               tags$br(),
-                               
-                               #optional images
-                               conditionalPanel(
-                                condition = "output.testimgs_provided",
-                                textInput("label_pic1", "Image 1 tag", "Logo1"),
-                               fileInput(inputId = "img1", label = "Image 1", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-                               textInput("label_pic2", "Image 2 tag", "Logo2"),
-                               fileInput(inputId = "img2", label = "Image 2", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-                               textInput("label_pic3", "Image 3 tag", NA),
-                               fileInput(inputId = "img3", label = "Image 3", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-                               textInput("label_pic4", "Image 4 tag", NA),
-                               fileInput(inputId = "img4", label = "Image 4", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-                               textInput("label_pic5", "Image 5 tag", NA),
-                               fileInput(inputId = "img5", label = "Image 5", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-                                                )
-                               ), 
+                             ), 
                              mainPanel(
                                h4("Chosen attributes and levels"),
                                tableOutput("table"),
-                               
+                               actionButton("some", "Make profile subset"),
                                tableOutput("table2")
                                       ) 
                             ),
@@ -78,18 +59,25 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     
                     #panel for making the image stimuli for the admin
                     #Aesthetics input very awkward still
-                    tabPanel("3. Make stimuli", "Here you can alter the format of all the choice sets simultaneously and download them in a compressed folder. 
+                    tabPanel("3. Make images", "Here you can alter the format of all the choice sets simultaneously and download them in a compressed folder. 
                              You can also download individual sets if they require unique formatting. 
-                             The download of sets will include a csv file with the analysis codes that will be required in step 5. Careful: Image decorations entered in this step only make profiles look nicer for participants. They are not analyzed in step 5.",
+                             The download of sets will include a csv file with the analysis codes that will be required in step 5.",
+                             tags$br(),
+                             "SPECIAL ATTENTION WHEN ADDING IMAGES! If the image choice is an additional attribute that you want to test, which is not determined by the text attributes you added before, please always add the same image on the left, on the right etc. (it is done so by default). 
+                             Also add a textual tag for each image (e.g., by writing Logo1 in the field Image A Tag, Logo2 in the field Image B Tag etc.).
+                             However, if the picture is logically determined by the text attributes (e.g., it says 'Breed: Poodle' in the profile, so you have to show an image of a Poodle for this profile), then add the images individually for each choice set and downlaod the individual choice sets. Leave the image tag fields empty in this case.",
                              tags$br(),
                              sidebarPanel(
                                tags$h4("Aesthetics:"),
                                
                                #optional images
-                               fileInput(inputId = "imgprof1", label = "Image decoration A", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-                               fileInput(inputId = "imgprof2", label = "Image decoration B", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-                               fileInput(inputId = "imgprof3", label = "Image decoration C", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
-
+                               fileInput(inputId = "imgprof1", label = "Image profile A", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
+                               textInput("label_pic1", "Image A tag", ""),
+                               fileInput(inputId = "imgprof2", label = "Image profile B", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
+                               textInput("label_pic2", "Image B tag", ""),
+                               fileInput(inputId = "imgprof3", label = "Image profile C", multiple = FALSE, accept = c(".png", ".jpg", ".jpeg")),
+                               textInput("label_pic3", "Image C tag", ""),
+                               
                                #aesthetics
                                textAreaInput("none_text", "'None' text", "None of these"),
                                
@@ -175,31 +163,22 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
 #server 
 server <- function(input, output) {
   
-  #hanneshelpers contains 4 custom functions:
+  #hanneshelpers contains 5 custom functions:
   #1.[resample_without_creating_duplicates] shuffles the order of choices within orthogonal piles of profiles
   #2.[mix_match] creates additional piles from initial orthogonal subset and calls function 1 to create choice sets
   #3.[plot_set] plots a choice set with profiles next to each other
-  #4.[importance_utility_ranking] conducts bayesian multilevel MNL regression and outputs plots etc.
+  #4.[get_a_png_plot] contains helper function for saving png's to the users computer
+  #5.[importance_utility_ranking] conducts bayesian multilevel MNL regression and outputs plots etc.
   source('hanneshelpers.R')
   
-  #Panel 2; imgpaths for reading in images in later panels
-  output$testimgs_provided <- reactive({input$testimages %% 2 == 1})
-  imgpaths <- reactive({
-    req(input$img1$datapath)
-    imgpaths = c(input$img1$datapath, input$img2$datapath, input$img3$datapath, input$img4$datapath, input$img5$datapath)
-    imglabels = c(input$label_pic1,input$label_pic2,input$label_pic3,input$label_pic4, input$label_pic5)
-    names(imgpaths) = imglabels[0:length(imgpaths)]
-    imgpaths
-    })
-  
   #Panel 2; generates the dataframe that shows the user their inputs 
-  v = eventReactive(c(input$txt2,input$txt1, input$testimages, input$label_pic1, input$label_pic2, input$label_pic3, input$label_pic4, input$label_pic5, input$img1, input$img2, input$img3, input$img4, input$img5),{
+  v = eventReactive(input$txt2, {
     attribute_names = strsplit(input$txt1, ",")
     nr_attributes = length(attribute_names[[1]])
     attribute_levels_strings = strsplit(input$txt2, ";")
     levels_vectors = list(); max_levels = 1
     for(i in 1:length(attribute_levels_strings[[1]])){
-      level_list = strsplit(attribute_levels_strings[[1]][i], ",")
+      level_list = strsplit(attribute_levels_strings[[1]][i], ",")#
       l = length(unlist(level_list))
       max_levels = max(max_levels, l)
       levels_vectors = c(levels_vectors, level_list)}
@@ -209,14 +188,8 @@ server <- function(input, output) {
       for(j in 1:length(levels_vectors[[i]])){
         dm[j,i] = levels_vectors[[i]][j]
       } }
-    if((input$testimages %% 2) == 1){
-      Image = c(input$label_pic1, input$label_pic2, input$label_pic3,input$label_pic4,input$label_pic5)
-      length(Image) = nrow(dm)
-      dm = cbind(Image, dm)
-    }
     dm[is.na(dm)] = ""
-    dm
-})
+    dm})
   
   #Panel 2, outputs user inputs
   output$table <- renderTable({v()})
@@ -285,41 +258,38 @@ server <- function(input, output) {
 
     #Panel 4; plot profile A
     output$plot1 = renderPlot({
-      if(isTruthy(input$imgprof1)){decorpath = input$imgprof1$datapath
-      }else{decorpath = NA}
+      if(isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
+      }else{imagepath = NA}
       s = sets()
-      #imgs = imgpaths()
-
-      set_plot = plot_set(s, as.integer(input$set_number), 1, aests()[[1]], decorpath, input$none_text, imgpaths())
-
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
       set_plot[[1]]
       }, width =200, height = 300)
     
     #Panel 4; plot profile B
     output$plot2 = renderPlot({
-      if(isTruthy(input$imgprof2)){decorpath = input$imgprof2$datapath
-      }else{decorpath = NA}
+      if(isTruthy(input$imgprof2)){imagepath = input$imgprof2$datapath
+      }else{imagepath = NA}
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), 2, aests()[[2]], decorpath, input$none_text, imgpaths())
-      set_plot[[1]]
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
+      set_plot[[2]]
     }, width =200, height = 300)
     
     #Panel 4; plot profile C
     output$plot3 = renderPlot({
-      if(isTruthy(input$imgprof3)){decorpath = input$imgprof3$datapath
-      }else{decorpath = NA}
+      if(isTruthy(input$imgprof3)){imagepath = input$imgprof3$datapath
+      }else{imagepath = NA}
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), 3, aests()[[3]], decorpath, input$none_text, imgpaths())
-      set_plot[[1]]
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
+      set_plot[[3]]
     }, width =200, height = 300)
     
     #Panel 4; none plot
     output$none_plot = renderPlot({
       if(!input$incl_none){return(NULL)}
-      decorpath = NA
+      imagepath = NA
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), 1, aests()[[1]], decorpath, input$none_text, imgpaths())
-      set_plot[[2]]
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)
+      set_plot[[4]]
     }, width =200, height = 300)
     
     #Panel 4; download single set (useful for set specific aethetics or pics)
@@ -338,28 +308,26 @@ server <- function(input, output) {
             s[new_col_names] = "None"
             path <- "none.png"
             fs <- c(fs, path)
-            p = plot_set(s, 1, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text, imgpaths())[[2]]  
+            p = plot_set(s, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text)[[4]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }
           path = "ANALYSES CODES DO NOT DELETE.csv"
           fs <- c(fs, path)
+          imgcols = c("Image_A", "Image_B", "Image_C")
+          s[imgcols] = cbind(input$label_pic1, input$label_pic2, input$label_pic3)
           write.csv(s, path, row.names = F)
 
+          #super ugly, try pasting profile to variable name
           for(profile in c(1,2,3)){
-            #super ugly, try pasting profile to variable name
-            # path1 = input$imgprof1$datapath
-            # path2 = input$imgprof2$datapath
-            # path3 = input$imgprof3$datapath
-            # decorpath = get(paste0(path, profile))
-            if(profile == 1 & isTruthy(input$imgprof1)){decorpath = input$imgprof1$datapath
-            }else if(profile == 2 & isTruthy(input$imgprof2)){decorpath = input$imgprof2$datapath
-            }else if(profile == 3 & isTruthy(input$imgprof3)){decorpath = input$imgprof3$datapath
-            }else{decorpath = NA}
+            if(profile == 1 & isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
+            }else if(profile == 2 & isTruthy(input$imgprof2)){imagepath = input$imgprof2$datapath
+            }else if(profile == 3 & isTruthy(input$imgprof3)){imagepath = input$imgprof3$datapath
+            }else{imagepath = NA}
 
             path <- paste(input$set_number, letters[profile], ".png", sep="")
             fs <- c(fs, path)
             s = sets()
-            p = plot_set(s, as.numeric(input$set_number), profile, aests()[[profile]], decorpath, input$none_text, imgpaths())[[1]]  
+            p = plot_set(s, as.numeric(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)[[profile]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }})
         tar(fname, fs)},
@@ -381,23 +349,25 @@ server <- function(input, output) {
             s[new_col_names] = "None"
             path <- "none.png"
             fs <- c(fs, path)
-            p = plot_set(s, 1, 1, aests()[[profile]], NA, input$none_text, imgs)[[2]]  
+            p = plot_set(s, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text)[[4]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }
           path = "ANALYSES CODES DO NOT DELETE.csv"
           fs <- c(fs, path)
+          imgcols = c("Image_A", "Image_B", "Image_C")
+          s[imgcols] = cbind(rep(input$label_pic1, nrow(s)), rep(input$label_pic2, nrow(s)), rep(input$label_pic3, nrow(s)))
           write.csv(s, path, row.names = F)
           
           for(set_number in 1:nrow(sets())) {
             for(profile in c(1,2,3)){
-              if(profile == 1 & isTruthy(input$imgprof1)){decorpath = input$imgprof1$datapath
-              }else if(profile == 2 & isTruthy(input$imgprof2)){decorpath = input$imgprof2$datapath
-              }else if(profile == 3 & isTruthy(input$imgprof3)){decorpath = input$imgprof3$datapath
-              }else{decorpath = NA}  
+              if(profile == 1 & isTruthy(input$imgprof1)){imagepath = input$imgprof1$datapath
+              }else if(profile == 2 & isTruthy(input$imgprof2)){imagepath = input$imgprof2$datapath
+              }else if(profile == 3 & isTruthy(input$imgprof3)){imagepath = input$imgprof3$datapath
+              }else{imagepath = NA}  
               path <- paste(set_number, letters[profile], ".png", sep="")
               fs <- c(fs, path)
               s = sets()
-              p = plot_set(s, set_number, profile, aests()[[profile]], decorpath, input$none_text, imgs)[[1]]  
+              p = plot_set(s, set_number, aests()[[1]], aests()[[2]], aests()[[3]], imagepath, input$none_text)[[profile]]  
               ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))}}
         })
         
@@ -442,7 +412,7 @@ server <- function(input, output) {
 
     #only run when element is shown
     outputOptions(output, 'adminnames_provided', suspendWhenHidden = FALSE)
-    outputOptions(output, 'testimgs_provided', suspendWhenHidden = FALSE)
+
 } #end  server
 
 shinyApp(ui = ui, server = server)
