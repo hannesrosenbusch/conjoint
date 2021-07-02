@@ -2,9 +2,9 @@
 #image_labels -- done
 #PNG in ADDITION TO JPG -- done
 #dpi variable for lower resolutuon pics -- done
-#insert images as attributes in step 1 -- done
-#plot_set to plot_profile  -- done
 #BETTER/COMPREHENSIVE INSTRUCTIONS  -- done
+
+#COMBAT CODE REDUNDANCIES
 #BETTER AESTHETICS
 
 library(jpeg)
@@ -80,7 +80,11 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     #Aesthetics input very awkward still
                     tabPanel("3. Make stimuli", "Here you can alter the format of all the choice sets simultaneously and download them in a compressed folder. 
                              You can also download individual sets if they require unique formatting. 
-                             The download of sets will include a csv file with the analysis codes that will be required in step 5. Careful: Image decorations entered in this step only make profiles look nicer for participants. They are not analyzed in step 5.",
+                             The download of sets will include a csv file with the analysis codes that will be required in step 5.",
+                             tags$br(),
+                             "SPECIAL ATTENTION WHEN ADDING IMAGES! If the image choice is an additional attribute that you want to test, which is not determined by the text attributes you added before, please always add the same image on the left, on the right etc. (it is done so by default). 
+                             Also add a textual tag for each image (e.g., by writing Logo1 in the field Image A Tag, Logo2 in the field Image B Tag etc.).
+                             However, if the picture is logically determined by the text attributes (e.g., it says 'Breed: Poodle' in the profile, so you have to show an image of a Poodle for this profile), then add the images individually for each choice set and downlaod the individual choice sets. Leave the image tag fields empty in this case.",
                              tags$br(),
                              sidebarPanel(
                                tags$h4("Aesthetics:"),
@@ -175,11 +179,12 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
 #server 
 server <- function(input, output) {
   
-  #hanneshelpers contains 4 custom functions:
+  #hanneshelpers contains 5 custom functions:
   #1.[resample_without_creating_duplicates] shuffles the order of choices within orthogonal piles of profiles
   #2.[mix_match] creates additional piles from initial orthogonal subset and calls function 1 to create choice sets
   #3.[plot_set] plots a choice set with profiles next to each other
-  #4.[importance_utility_ranking] conducts bayesian multilevel MNL regression and outputs plots etc.
+  #4.[get_a_png_plot] contains helper function for saving png's to the users computer
+  #5.[importance_utility_ranking] conducts bayesian multilevel MNL regression and outputs plots etc.
   source('hanneshelpers.R')
   
   #Panel 2; imgpaths for reading in images in later panels
@@ -210,9 +215,9 @@ server <- function(input, output) {
         dm[j,i] = levels_vectors[[i]][j]
       } }
     if((input$testimages %% 2) == 1){
-      Image = c(input$label_pic1, input$label_pic2, input$label_pic3,input$label_pic4,input$label_pic5)
-      length(Image) = nrow(dm)
-      dm = cbind(Image, dm)
+      Images = c(input$label_pic1, input$label_pic2, input$label_pic3,input$label_pic4,input$label_pic5)
+      length(Images) = nrow(dm)
+      dm = cbind(Images, dm)
     }
     dm[is.na(dm)] = ""
     dm
@@ -288,10 +293,8 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof1)){decorpath = input$imgprof1$datapath
       }else{decorpath = NA}
       s = sets()
-      #imgs = imgpaths()
-
-      set_plot = plot_set(s, as.integer(input$set_number), 1, aests()[[1]], decorpath, input$none_text, imgpaths())
-
+      imgs = imgpaths()
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], decorpath, input$none_text, imgs)
       set_plot[[1]]
       }, width =200, height = 300)
     
@@ -300,8 +303,9 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof2)){decorpath = input$imgprof2$datapath
       }else{decorpath = NA}
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), 2, aests()[[2]], decorpath, input$none_text, imgpaths())
-      set_plot[[1]]
+      imgs = imgpaths()
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], decorpath, input$none_text, imgs)
+      set_plot[[2]]
     }, width =200, height = 300)
     
     #Panel 4; plot profile C
@@ -309,8 +313,9 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof3)){decorpath = input$imgprof3$datapath
       }else{decorpath = NA}
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), 3, aests()[[3]], decorpath, input$none_text, imgpaths())
-      set_plot[[1]]
+      imgs = imgpaths()
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], decorpath, input$none_text, imgs)
+      set_plot[[3]]
     }, width =200, height = 300)
     
     #Panel 4; none plot
@@ -318,8 +323,9 @@ server <- function(input, output) {
       if(!input$incl_none){return(NULL)}
       decorpath = NA
       s = sets()
-      set_plot = plot_set(s, as.integer(input$set_number), 1, aests()[[1]], decorpath, input$none_text, imgpaths())
-      set_plot[[2]]
+      imgs = imgpaths()
+      set_plot = plot_set(s, as.integer(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], decorpath, input$none_text, imgs)
+      set_plot[[4]]
     }, width =200, height = 300)
     
     #Panel 4; download single set (useful for set specific aethetics or pics)
@@ -331,6 +337,7 @@ server <- function(input, output) {
         tmpdir <- tempdir()
         setwd(tmpdir)
         s = sets()
+        imgs = imgpaths()
         withProgress(message = 'Making images...', value = 0.5, {
           if(input$incl_none){
             attr_names = colnames(s)[grepl("_a", colnames(s))]
@@ -338,19 +345,17 @@ server <- function(input, output) {
             s[new_col_names] = "None"
             path <- "none.png"
             fs <- c(fs, path)
-            p = plot_set(s, 1, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text, imgpaths())[[2]]  
+            p = plot_set(s, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text, imgs)[[4]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }
           path = "ANALYSES CODES DO NOT DELETE.csv"
           fs <- c(fs, path)
+          imgcols = c("Image_A", "Image_B", "Image_C")
+          s[imgcols] = cbind(input$label_pic1, input$label_pic2, input$label_pic3)
           write.csv(s, path, row.names = F)
 
+          #super ugly, try pasting profile to variable name
           for(profile in c(1,2,3)){
-            #super ugly, try pasting profile to variable name
-            # path1 = input$imgprof1$datapath
-            # path2 = input$imgprof2$datapath
-            # path3 = input$imgprof3$datapath
-            # decorpath = get(paste0(path, profile))
             if(profile == 1 & isTruthy(input$imgprof1)){decorpath = input$imgprof1$datapath
             }else if(profile == 2 & isTruthy(input$imgprof2)){decorpath = input$imgprof2$datapath
             }else if(profile == 3 & isTruthy(input$imgprof3)){decorpath = input$imgprof3$datapath
@@ -359,7 +364,7 @@ server <- function(input, output) {
             path <- paste(input$set_number, letters[profile], ".png", sep="")
             fs <- c(fs, path)
             s = sets()
-            p = plot_set(s, as.numeric(input$set_number), profile, aests()[[profile]], decorpath, input$none_text, imgpaths())[[1]]  
+            p = plot_set(s, as.numeric(input$set_number), aests()[[1]], aests()[[2]], aests()[[3]], decorpath, input$none_text, imgs)[[profile]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }})
         tar(fname, fs)},
@@ -374,6 +379,7 @@ server <- function(input, output) {
         tmpdir <- tempdir()
         setwd(tmpdir)
         s = sets()
+        imgs = imgpaths()
         withProgress(message = 'Making images...', value = 0.5, {
           if(input$incl_none){
             attr_names = colnames(s)[grepl("_a", colnames(s))]
@@ -381,11 +387,13 @@ server <- function(input, output) {
             s[new_col_names] = "None"
             path <- "none.png"
             fs <- c(fs, path)
-            p = plot_set(s, 1, 1, aests()[[profile]], NA, input$none_text, imgs)[[2]]  
+            p = plot_set(s, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text, imgs)[[4]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }
           path = "ANALYSES CODES DO NOT DELETE.csv"
           fs <- c(fs, path)
+          imgcols = c("Image_A", "Image_B", "Image_C")
+          s[imgcols] = cbind(rep(input$label_pic1, nrow(s)), rep(input$label_pic2, nrow(s)), rep(input$label_pic3, nrow(s)))
           write.csv(s, path, row.names = F)
           
           for(set_number in 1:nrow(sets())) {
@@ -397,7 +405,7 @@ server <- function(input, output) {
               path <- paste(set_number, letters[profile], ".png", sep="")
               fs <- c(fs, path)
               s = sets()
-              p = plot_set(s, set_number, profile, aests()[[profile]], decorpath, input$none_text, imgs)[[1]]  
+              p = plot_set(s, set_number, aests()[[1]], aests()[[2]], aests()[[3]], decorpath, input$none_text, imgs)[[profile]]  
               ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))}}
         })
         

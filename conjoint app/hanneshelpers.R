@@ -78,94 +78,74 @@ mix_match = function(pile1, third_pile = T){
 }
 
 
-plot_set = function(sets, set_number = 1, aest1, aest2, aest3, imagepath, none_text){
+plot_set = function(sets, set_number = 1, profile_number, aest, decorpath, none_text, imgs){
 sets['Set'] = NULL
 colnames(sets) = gsub('_a', '', colnames(sets));colnames(sets) = gsub('_b', '', colnames(sets));colnames(sets) = gsub('_c', '', colnames(sets))
-  
-elements1 = sets[set_number,1:(ncol(sets)/3)]
-elements1=elements1[,order(ncol(elements1):1)]
-colnames(elements1) = paste(colnames(elements1), ":", "")
 
-if(!is.na(imagepath)){
- if(substr(imagepath, nchar(imagepath)-3, nchar(imagepath)) == ".png"){
-   pn = readPNG(imagepath)
+elements = sets[set_number, ((profile_number-1) * ncol(sets)/3 + 1):(profile_number * ncol(sets)/3)]
+elements=elements[,order(ncol(elements):1)]
+
+if(sum(grepl("Image", colnames(elements))) > 0){
+  imgpath = imgs[elements$Image]
+  if(substr(imgpath, nchar(imgpath)-3, nchar(imgpath)) == ".png"){
+    pn = readPNG(imgpath)
+    g = rasterGrob(pn, interpolate=TRUE)
+  }else if(substr(imgpath, nchar(imgpath)-3, nchar(imgpath)) == ".jpg" | substr(imgpath, nchar(imgpath)-4, nchar(imgpath)) == ".jpeg"){
+    jp = readJPEG(imgpath)
+    g = rasterGrob(jp, interpolate=TRUE)
+  }else{stop("weird input format")}
+}else if(!is.na(decorpath)){#this else if for imgs vs decor or let user overwrite?
+ if(substr(decorpath, nchar(decorpath)-3, nchar(decorpath)) == ".png"){
+   pn = readPNG(decorpath)
    g = rasterGrob(pn, interpolate=TRUE)
- }else if(substr(imagepath, nchar(imagepath)-3, nchar(imagepath)) == ".jpg" | substr(imagepath, nchar(imagepath)-4, nchar(imagepath)) == ".jpeg"){
-  jp = readJPEG(imagepath)
+ }else if(substr(decorpath, nchar(decorpath)-3, nchar(decorpath)) == ".jpg" | substr(decorpath, nchar(decorpath)-4, nchar(decorpath)) == ".jpeg"){
+  jp = readJPEG(decorpath)
   g = rasterGrob(jp, interpolate=TRUE)
  }else{stop("weird input format")}
 }else{g = NA}
 
-set1 = ggplot() +  
-  geom_text(aes(x = aest1['gap']/10, y = 1:ncol(elements1),
-                label = unlist(elements1[1,]), hjust = 0,fontface = "bold"), size = aest1['font_size_vals']) +
-  geom_text( aes(x = 0, y = 1:ncol(elements1), 
-                label = colnames(elements1)), hjust = 1, size = aest3['font_size_keys']) +
+
+colnames(elements) = paste0(colnames(elements), ":")
+
+profile_plot= ggplot() +  
+  geom_text(aes(x = aest['gap']/10, y = 1:ncol(elements),
+                label = unlist(elements[1,]), hjust = 0,fontface = "bold"), size = aest['font_size_vals']) +
+  geom_text( aes(x = 0, y = 1:ncol(elements), 
+                label = colnames(elements)), hjust = 1, size = aest['font_size_keys']) +
   theme_bw()+ 
-  scale_y_continuous(breaks = NULL, limits = c(-1*aest1['bottom_buffer'],ncol(elements1)+1+aest1['top_buffer'])) + 
-  scale_x_continuous(breaks = NULL, limits = c( -0.6- aest1['left_buffer'],1 )) + 
+  scale_y_continuous(breaks = NULL, limits = c(-1*aest['bottom_buffer'],ncol(elements)+1+aest['top_buffer'])) + 
+  scale_x_continuous(breaks = NULL, limits = c( -0.6- aest['left_buffer'],1 )) + 
   theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
   {
-    if(!all(is.na(g))){annotation_custom(g, xmin=aest1['left_pic'], xmax=aest1['right_pic'], ymin=aest1['bottom_pic'], ymax=aest1['top_pic'])}
+    if(!all(is.na(g))){annotation_custom(g, xmin=aest['left_pic'], xmax=aest['right_pic'], ymin=aest['bottom_pic'], ymax=aest['top_pic'])}
   }
 
-elements2 = sets[set_number,((ncol(sets)/3)+1):(2*ncol(sets)/3)]
-colnames(elements2) = paste(colnames(elements2), ":", "")
-elements2=elements2[,order(ncol(elements2):1)]
-
-set2 = ggplot() +  
-  geom_text(aes(x = aest2['gap']/10, y = 1:ncol(elements2), 
-                label = unlist(elements2[1,]), hjust = 0,fontface = "bold"), size = aest2['font_size_vals']) +
-  geom_text(aes(x = 0, y = 1:ncol(elements2), 
-                label = colnames(elements2)), hjust = 1, size = aest2['font_size_keys']) +
-  theme_bw()+ 
-  scale_y_continuous(breaks = NULL, limits = c(-1*aest2['bottom_buffer'],ncol(elements2)+1+aest2['top_buffer'])) + 
-  scale_x_continuous(breaks = NULL, limits = c(-0.6-  aest2['left_buffer'],1)) + 
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank())  +{
-    if(!all(is.na(g))){annotation_custom(g, xmin=aest2['left_pic'], xmax=aest2['right_pic'], ymin=aest2['bottom_pic'], ymax=aest2['top_pic'])}
-  }
-
-elements3 = sets[set_number,((2*ncol(sets)/3) +1):ncol(sets)]
-colnames(elements3) = paste(colnames(elements3), ":", "")
-# colnames(elements3) = gsub('.2','',colnames(elements3))
-elements3=elements3[,order(ncol(elements3):1)]
-set3 = ggplot() +  
-  geom_text(aes(x = aest3['gap']/10, y = 1:ncol(elements3), 
-                label = unlist(elements3[1,]), hjust = 0,fontface = "bold"), size = aest3['font_size_vals']) +
-  geom_text(aes(x = 0, y = 1:ncol(elements3), 
-                label = colnames(elements3)), hjust = 1, size = aest3['font_size_keys']) +
-  theme_bw()+ 
-  scale_y_continuous(breaks = NULL, limits = c(-1*aest3['bottom_buffer'],ncol(elements3)+1+aest3['top_buffer'])) + 
-  scale_x_continuous(breaks = NULL, limits = c(-0.6-  aest3['left_buffer'],1)) + 
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) + {
-    if(!all(is.na(g))){annotation_custom(g, xmin=aest3['left_pic'], xmax=aest3['right_pic'], ymin=aest3['bottom_pic'], ymax=aest3['top_pic'])}
-  }
 
 
 none_plot = ggplot() +  
   geom_text(aes(x = 0, y = 2, 
-                label = none_text, fontface = "bold"), size = aest1['font_size_vals']) +
+                label = none_text, fontface = "bold"), size = aest['font_size_vals']) +
   theme_bw()+ 
   scale_y_continuous(breaks = NULL, limits = c(0,4)) + 
   scale_x_continuous(breaks = NULL, limits = c(-1,1)) + 
   theme(axis.title.x = element_blank(), axis.title.y = element_blank()) 
 
-list(set1,set2,set3, none_plot)
+list(profile_plot,none_plot)
 
 }
 
 
-get_a_png_plot <- function(sets, set_number, aest1, aest2, aest3, profile){
-  if(profile == "a"){
-  p = plot_set(sets, set_number, aest1, aest2, aest3)[[1]]
-  }else if(profile == "b"){
-    p= plot_set(sets, set_number, aest1, aest2, aest3)[[2]]
-  }else if(profile == "c"){
-    p= plot_set(sets, set_number, aest1, aest2, aest3)[[3]]
-  }else{stop("profile isnt a, b, or c")}
-  p
-
-}
+# get_a_png_plot <- function(sets, set_number, aest1, aest2, aest3, profile){
+#   if(profile == "a"){
+#   p = plot_set(sets, set_number, aest1, aest2, aest3)[[1]]
+#   }else if(profile == "b"){
+#     p= plot_set(sets, set_number, aest1, aest2, aest3)[[2]]
+#   }else if(profile == "c"){
+#     p= plot_set(sets, set_number, aest1, aest2, aest3)[[3]]
+#   }else{stop("profile isnt a, b, or c")}
+#   p
+# 
+# }
 
 
 importance_utility_ranking = function(df, key, nr_profiles, none_option){
