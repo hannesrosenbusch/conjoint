@@ -1,11 +1,17 @@
-#TO DO LIST
+#TO-DO LIST
 #image_labels -- done
 #PNG in ADDITION TO JPG -- done
 #dpi variable for lower resolutuon pics -- done
 #insert images as attributes in step 1 -- done
 #plot_set to plot_profile  -- done
-#BETTER/COMPREHENSIVE INSTRUCTIONS  -- done
-#BETTER AESTHETICS
+#better isntructions  -- partly done
+#loading progress bar for stimuli plots
+#better aesthetics
+
+#BIG-EXTENSION LIST
+#automatic linking between attributes and decorative pictures
+#possibility to show 2 instead of 3 profiles
+#ranking conjoint
 
 library(jpeg)
 library(png)
@@ -37,8 +43,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                              tags$br(),
                              sidebarPanel(
                                tags$h3("Input:"),
-                               textInput("txt1", "Names of attributes:", "Geschmack,  Behaelter, Preis, Streusel"),
-                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = "Schokolade, Spinat, Erdbeere, Vanille;Plastikbecher, Pappbecher, Waffel; 0.50, 1, 2, 3;Mit, Ohne"),
+                               textInput("txt1", "Names of attributes:", "Attractiveness, Smiling, Job, Politik, Hobby"),
+                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = "High, Low; Yes, No; Berater, Pfleger, Arbeitslos, Maler; Eher links,  Eher mittig, Eher rechts; Schwimmen, Tanzen, Lesen, Keine"),
                                actionButton("testimages", "Test images"),
                                actionButton("some", "Make profile subset", class = "btn-primary"),
                                tags$br(),
@@ -93,15 +99,15 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                #aesthetics
                                textAreaInput("none_text", "'None' text", "None of these"),
                                
-                               textInput("bottom_pic1", "Picture bottom 1", "2"),
+                               textInput("bottom_pic1", "Picture bottom 1", "3.5"),
                                textInput("left_pic1", "Picture left 1", "-Inf"),
                                textInput("right_pic1", "Picture right 1", "Inf"),
                                textInput("top_pic1", "Picture top 1", "Inf"),
-                               textInput("bottom_pic2", "Picture bottom 2", "2"),
+                               textInput("bottom_pic2", "Picture bottom 2", "3.5"),
                                textInput("left_pic2", "Picture left 2", "-Inf"),
                                textInput("right_pic2", "Picture right 2", "Inf"),
                                textInput("top_pic2", "Picture top 2", "Inf"),
-                               textInput("bottom_pic3", "Picture bottom 3", "2"),
+                               textInput("bottom_pic3", "Picture bottom 3", "3.5"),
                                textInput("left_pic3", "Picture left 3", "-Inf"),
                                textInput("right_pic3", "Picture right 3", "Inf"),
                                textInput("top_pic3", "Picture top 3", "Inf"),
@@ -111,19 +117,19 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                textInput("font_size_keys1", "Font size keys 1", "3"),
                                textInput("font_size_keys2", "Font size keys 2", "3"),
                                textInput("font_size_keys3", "Font size keys 3", "3"),
-                               textInput("bottom_buffer1", "Bottom buffer 1", "0"),
-                               textInput("bottom_buffer2", "Bottom buffer 2", "0"),
-                               textInput("bottom_buffer3", "Bottom buffer 3", "0"),
-                               textInput("top_buffer1", "Top buffer 1", "0"),
-                               textInput("top_buffer2", "Top buffer 2", "0"),
-                               textInput("top_buffer3", "Top buffer 3", "0"),
+                               textInput("bottom_buffer1", "Bottom buffer 1", "-1"),
+                               textInput("bottom_buffer2", "Bottom buffer 2", "-1"),
+                               textInput("bottom_buffer3", "Bottom buffer 3", "-1"),
+                               textInput("top_buffer1", "Top buffer 1", "2"),
+                               textInput("top_buffer2", "Top buffer 2", "2"),
+                               textInput("top_buffer3", "Top buffer 3", "2"),
                                textInput("left_buffer1", "Left buffer 1", "0"),
                                textInput("left_buffer2", "Left buffer 2", "0"),
                                textInput("left_buffer3", "Left buffer 3", "0"),
                                textInput("gap1", "Gap 1", "0"),
                                textInput("gap2", "Gap 2", "0"),
                                textInput("gap3", "Gap 3", "0"),
-                               textInput("resolut", "Resolution of output (dpi)", "700"),
+                               textInput("resolut", "Resolution of output (dpi)", "400"),
                                       ),
                              
                              #main panel for displaying the stimuli
@@ -338,7 +344,7 @@ server <- function(input, output) {
             s[new_col_names] = "None"
             path <- "none.png"
             fs <- c(fs, path)
-            p = plot_set(s, 1, 1, aests()[[1]], aests()[[2]], aests()[[3]], NA, input$none_text, imgpaths())[[2]]  
+            p = plot_set(s, 1, 1, aests()[[1]], NA, input$none_text, imgpaths())[[2]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }
           path = "ANALYSES CODES DO NOT DELETE.csv"
@@ -381,7 +387,7 @@ server <- function(input, output) {
             s[new_col_names] = "None"
             path <- "none.png"
             fs <- c(fs, path)
-            p = plot_set(s, 1, 1, aests()[[profile]], NA, input$none_text, imgs)[[2]]  
+            p = plot_set(s, 1, 1, aests()[[profile]], NA, input$none_text, imgpaths())[[2]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }
           path = "ANALYSES CODES DO NOT DELETE.csv"
@@ -397,7 +403,7 @@ server <- function(input, output) {
               path <- paste(set_number, letters[profile], ".png", sep="")
               fs <- c(fs, path)
               s = sets()
-              p = plot_set(s, set_number, profile, aests()[[profile]], decorpath, input$none_text, imgs)[[1]]  
+              p = plot_set(s, set_number, profile, aests()[[profile]], decorpath, input$none_text, imgpaths())[[1]]  
               ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))}}
         })
         
