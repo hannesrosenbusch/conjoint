@@ -423,10 +423,12 @@ server <- function(input, output) {
     #Panel 5, carry out analysis and return plots, insights of interest
     analysis <- eventReactive(input$analysisstart, {
       withProgress(message = 'Analyzing...', value = 0.5, {
+        print("ooh")
         key = data.table::fread(input$keydf$datapath, data.table = FALSE)
         admin = data.table::fread(input$admindf$datapath, data.table = FALSE)
         colnames(admin) = sapply(colnames(admin), function(x){substr(x, 1, min(12, nchar(x)))})
         admin = admin[, input$columns]
+        print(dim(admin))
         r = importance_utility_ranking(df = admin,key = key, nr_profiles = 3, none_option = FALSE)})
         r})
 

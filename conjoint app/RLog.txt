@@ -718,3 +718,400 @@ Total Time Elapsed: 0:20
 
 Writing estimated unit-level betas to Rbetas.csv in the working directory
 
+                    Logit Data                    
+==================================================
+Attribute       Type         Levels
+-----------------------------------
+Attribute 1    Part Worth      4
+Attribute 2    Part Worth      3
+Attribute 3    Part Worth      4
+Attribute 4    Part Worth      2
+
+9 parameters to be estimated.
+
+400 total units.
+Average of 3 alternatives in each of 16 sets per unit.
+6400 tasks in total.
+
+Table of choice data pooled across units:
+Choice  Count   Pct.
+--------------------
+   1    2142   33.47%
+   2    2186   34.16%
+   3    2072   32.38%
+
+      MCMC Inference for Hierarchical Logit       
+==================================================
+Total Iterations:          4000
+Draws used in estimation:  3500
+Units:                     400
+Parameters per unit:       9
+Constraints not in effect.
+Draws are to be saved.
+Prior degrees of freedom:  5
+Prior variance:            2
+
+MCMC Iteration Beginning...
+Iteration  Acceptance   RLH     Pct. Cert.   Avg. Var.   RMS     Time to End
+      100  0.378        0.415   0.182        0.17        0.37    0:33  
+      200  0.310        0.512   0.375        0.63        0.99    0:30  
+      300  0.305        0.559   0.463        1.01        1.38    0:28  
+      400  0.304        0.583   0.505        1.32        1.63    0:28  
+      500  0.308        0.595   0.525        1.61        1.82    0:26  
+      600  0.302        0.598   0.531        1.73        1.90    0:26  
+      700  0.303        0.600   0.534        1.83        1.95    0:25  
+      800  0.301        0.599   0.534        1.86        1.97    0:25  
+      900  0.307        0.602   0.538        2.08        2.08    0:24  
+     1000  0.303        0.602   0.539        2.11        2.10    0:24  
+     1100  0.300        0.605   0.542        2.21        2.17    0:23  
+     1200  0.299        0.606   0.544        2.25        2.18    0:22  
+     1300  0.301        0.605   0.543        2.13        2.12    0:21  
+     1400  0.299        0.604   0.541        2.09        2.09    0:20  
+     1500  0.309        0.604   0.542        2.10        2.11    0:20  
+     1600  0.307        0.604   0.541        2.18        2.15    0:19  
+     1700  0.304        0.603   0.540        2.32        2.22    0:18  
+     1800  0.305        0.605   0.542        2.34        2.22    0:17  
+     1900  0.300        0.604   0.541        2.42        2.26    0:16  
+     2000  0.300        0.603   0.540        2.35        2.23    0:16  
+     2100  0.303        0.603   0.540        2.31        2.22    0:15  
+     2200  0.298        0.603   0.539        2.17        2.15    0:14  
+     2300  0.305        0.605   0.543        2.15        2.14    0:13  
+     2400  0.304        0.604   0.542        2.13        2.12    0:13  
+     2500  0.305        0.605   0.543        2.19        2.15    0:12  
+     2600  0.299        0.601   0.536        2.06        2.10    0:11  
+     2700  0.301        0.600   0.535        1.97        2.05    0:10  
+     2800  0.300        0.600   0.535        1.79        1.96    0:10  
+     2900  0.298        0.598   0.533        1.76        1.93    0:09  
+     3000  0.304        0.599   0.533        1.71        1.92    0:08  
+     3100  0.304        0.600   0.535        1.85        1.99    0:07  
+     3200  0.304        0.601   0.536        1.99        2.05    0:07  
+     3300  0.303        0.599   0.533        2.12        2.11    0:06  
+     3400  0.304        0.598   0.531        2.02        2.06    0:05  
+     3500  0.303        0.600   0.535        2.11        2.12    0:04  
+     3600  0.304        0.600   0.535        2.32        2.21    0:03  
+     3700  0.306        0.600   0.535        2.23        2.17    0:02  
+     3800  0.302        0.603   0.540        2.20        2.14    0:02  
+     3900  0.300        0.605   0.542        2.17        2.14    0:01  
+     4000  0.300        0.604   0.541        2.23        2.17    0:00  
+
+Total Time Elapsed: 0:33
+
+Writing estimated unit-level betas to Rbetas.csv in the working directory
+
+                    Logit Data                                        Logit Data                    
+==================================================
+Attribute       Type         Levels
+-----------------------------------
+Attribute 1    Part Worth      4
+Attribute 2    Part Worth      3
+Attribute 3    Part Worth      4
+Attribute 4    Part Worth      2
+
+9 parameters to be estimated.
+
+400 total units.
+Average of 3 alternatives in each of 16 sets per unit.
+6400 tasks in total.
+
+Table of choice data pooled across units:
+Choice  Count   Pct.
+--------------------
+   1    2142   33.47%
+   2    2186   34.16%
+   3    2072   32.38%
+
+      MCMC Inference for Hierarchical Logit       
+==================================================
+Total Iterations:          4000
+Draws used in estimation:  3500
+Units:                     400
+Parameters per unit:       9
+Constraints not in effect.
+Draws are to be saved.
+Prior degrees of freedom:  5
+Prior variance:            2
+
+MCMC Iteration Beginning...
+Iteration  Acceptance   RLH     Pct. Cert.   Avg. Var.   RMS     Time to End
+      100  0.373        0.414   0.180        0.17        0.36    0:28  
+      200  0.299        0.510   0.370        0.57        0.95    0:29  
+      300  0.306        0.559   0.462        1.02        1.39    0:26  
+      400  0.305        0.580   0.501        1.31        1.63    0:25  
+      500  0.305        0.591   0.520        1.55        1.80    0:25  
+      600  0.302        0.596   0.529        1.76        1.92    0:24  
+      700  0.301        0.600   0.534        1.85        1.98    0:24  
+      800  0.307        0.601   0.536        1.97        2.03    0:24  
+      900  0.303        0.600   0.536        1.99        2.06    0:24  
+     1000  0.301        0.601   0.536        2.01        2.06    0:23  
+     1100  0.301        0.601   0.537        1.99        2.04    0:22  
+     1200  0.300        0.601   0.536        2.09        2.09    0:21  
+     1300  0.308        0.604   0.541        2.04        2.07    0:21  
+     1400  0.301        0.604   0.542        2.07        2.08    0:20  
+     1500  0.307        0.604   0.542        2.12        2.11    0:19  
+     1600  0.300        0.606   0.544        2.24        2.16    0:18  
+     1700  0.306        0.604   0.541        2.20        2.15    0:18  
+     1800  0.303        0.606   0.544        2.43        2.26    0:17  
+     1900  0.304        0.605   0.542        2.41        2.26    0:16  
+     2000  0.305        0.601   0.536        2.20        2.16    0:16  
+     2100  0.303        0.600   0.535        2.04        2.08    0:15  
+     2200  0.303        0.599   0.534        1.98        2.05    0:14  
+     2300  0.304        0.599   0.534        2.09        2.09    0:13  
+     2400  0.301        0.600   0.535        1.97        2.04    0:13  
+     2500  0.303        0.599   0.534        1.87        1.99    0:12  
+     2600  0.301        0.600   0.535        1.96        2.03    0:11  
+     2700  0.306        0.599   0.533        2.05        2.09    0:11  
+     2800  0.304        0.600   0.535        2.06        2.08    0:10  
+     2900  0.297        0.598   0.531        1.95        2.04    0:09  
+     3000  0.302        0.599   0.534        2.02        2.07    0:08  
+     3100  0.300        0.600   0.535        2.12        2.12    0:07  
+     3200  0.306        0.601   0.536        1.97        2.04    0:07  
+     3300  0.306        0.599   0.533        1.94        2.01    0:06  
+     3400  0.306        0.599   0.533        2.09        2.09    0:05  
+     3500  0.303        0.601   0.537        2.11        2.10    0:04  
+     3600  0.304        0.600   0.535        2.05        2.08    0:03  
+     3700  0.304        0.604   0.541        1.99        2.05    0:03  
+     3800  0.303        0.604   0.541        1.94        2.02    0:02  
+     3900  0.302        0.603   0.539        1.95        2.02    0:01  
+     4000  0.300        0.600   0.535        1.96        2.04    0:00  
+
+Total Time Elapsed: 0:37
+
+Writing estimated unit-level betas to Rbetas.csv in the working directory
+
+                    Logit Data                    
+==================================================
+Attribute       Type         Levels
+-----------------------------------
+Attribute 1    Part Worth      4
+Attribute 2    Part Worth      3
+Attribute 3    Part Worth      4
+Attribute 4    Part Worth      2
+
+9 parameters to be estimated.
+
+400 total units.
+Average of 3 alternatives in each of 16 sets per unit.
+6400 tasks in total.
+
+Table of choice data pooled across units:
+Choice  Count   Pct.
+--------------------
+   1    2142   33.47%
+   2    2186   34.16%
+   3    2072   32.38%
+
+      MCMC Inference for Hierarchical Logit       
+==================================================
+Total Iterations:          4000
+Draws used in estimation:  3500
+Units:                     400
+Parameters per unit:       9
+Constraints not in effect.
+Draws are to be saved.
+Prior degrees of freedom:  5
+Prior variance:            2
+
+MCMC Iteration Beginning...
+Iteration  Acceptance   RLH     Pct. Cert.   Avg. Var.   RMS     Time to End
+      100  0.377        0.416   0.185        0.18        0.38    0:27  
+      200  0.301        0.511   0.372        0.62        0.99    0:27  
+      300  0.302        0.560   0.464        1.12        1.46    0:26  
+      400  0.305        0.583   0.505        1.52        1.76    0:26  
+      500  0.298        0.594   0.524        1.81        1.94    0:25  
+                    Logit Data                    
+==================================================
+Attribute       Type         Levels
+-----------------------------------
+Attribute 1    Part Worth      2
+Attribute 2    Part Worth      2
+Attribute 3    Part Worth      4
+Attribute 4    Part Worth      3
+Attribute 5    Part Worth      4
+
+10 parameters to be estimated.
+
+1001 total units.
+Average of 3 alternatives in each of 16 sets per unit.
+16016 tasks in total.
+
+Table of choice data pooled across units:
+Choice  Count   Pct.
+--------------------
+   1    9294   58.03%
+   2    3340   20.85%
+   3    3382   21.12%
+
+      MCMC Inference for Hierarchical Logit       
+==================================================
+Total Iterations:          4000
+Draws used in estimation:  3500
+Units:                     1001
+Parameters per unit:       10
+Constraints not in effect.
+Draws are to be saved.
+Prior degrees of freedom:  5
+Prior variance:            2
+
+MCMC Iteration Beginning...
+Iteration  Acceptance   RLH     Pct. Cert.   Avg. Var.   RMS     Time to End
+      100  0.377        0.357   0.061        0.05        0.16    1:11  
+      200  0.300        0.381   0.121        0.11        0.31    1:02  
+      300  0.308        0.393   0.148        0.15        0.41    0:58  
+      400  0.300        0.397   0.159        0.17        0.46    0:56  
+      500  0.303        0.399   0.163        0.19        0.48    0:54  
+      600  0.303        0.399   0.164        0.19        0.48    0:52  
+      700  0.306        0.399   0.164        0.19        0.49    0:51  
+      800  0.301        0.399   0.165        0.20        0.50    0:49  
+      900  0.302        0.400   0.165        0.20        0.50    0:48  
+     1000  0.302        0.400   0.166        0.20        0.50    0:46  
+     1100  0.300        0.400   0.166        0.19        0.49    0:45  
+     1200  0.300        0.400   0.165        0.19        0.49    0:43  
+     1300  0.305        0.399   0.164        0.19        0.49    0:41  
+     1400  0.298        0.400   0.166        0.19        0.49    0:40  
+     1500  0.302        0.400   0.166        0.19        0.49    0:39  
+     1600  0.301        0.400   0.166        0.19        0.49    0:37  
+     1700  0.299        0.400   0.166        0.19        0.49    0:36  
+     1800  0.304        0.399   0.164        0.19        0.49    0:35  
+     1900  0.302        0.399   0.164        0.19        0.49    0:33  
+     2000  0.304        0.399   0.164        0.19        0.49    0:32  
+     2100  0.303        0.399   0.164        0.19        0.49    0:30  
+     2200  0.304        0.399   0.164        0.19        0.49    0:29  
+     2300  0.298        0.399   0.164        0.19        0.49    0:27  
+     2400  0.298        0.400   0.165        0.19        0.49    0:25  
+     2500  0.304        0.400   0.166        0.19        0.49    0:24  
+     2600  0.303        0.400   0.165        0.19        0.49    0:22  
+     2700  0.304        0.399   0.164        0.19        0.49    0:21  
+     2800  0.307        0.399   0.164        0.19        0.49    0:19  
+     2900  0.299        0.399   0.165        0.19        0.49    0:17  
+     3000  0.302        0.400   0.165        0.20        0.49    0:16  
+     3100  0.303        0.400   0.165        0.19        0.49    0:14  
+     3200  0.299        0.399   0.165        0.19        0.49    0:13  
+     3300  0.305        0.400   0.166        0.19        0.49    0:11  
+     3400  0.301        0.399   0.164        0.20        0.49    0:10  
+     3500  0.303        0.399   0.164        0.19        0.49    0:08  
+     3600  0.300        0.399   0.163        0.19        0.48    0:06  
+     3700  0.304        0.399   0.164        0.19        0.49    0:05  
+     3800  0.308        0.400   0.167        0.20        0.49    0:03  
+     3900  0.302        0.399   0.165        0.20        0.49    0:02  
+     4000  0.300        0.399   0.163        0.19        0.49    0:00  
+
+Total Time Elapsed: 1:04
+
+Writing estimated unit-level betas to Rbetas.csv in the working directory
+
+                    Logit Data                    
+==================================================
+Attribute       Type         Levels
+-----------------------------------
+Attribute 1    Part Worth      2
+Attribute 2    Part Worth      2
+Attribute 3    Part Worth      4
+Attribute 4    Part Worth      3
+Attribute 5    Part Worth      4
+
+10 parameters to be estimated.
+
+1001 total units.
+Average of 3 alternatives in each of 16 sets per unit.
+16016 tasks in total.
+
+Table of choice data pooled across units:
+Choice  Count   Pct.
+--------------------
+   1    3288   32.85%
+   2    3340   33.37%
+   3    3382   33.79%
+
+      MCMC Inference for Hierarchical Logit       
+==================================================
+Total Iterations:          4000
+Draws used in estimation:  3500
+Units:                     1001
+Parameters per unit:       10
+Constraints not in effect.
+Draws are to be saved.
+Prior degrees of freedom:  5
+Prior variance:            2
+
+MCMC Iteration Beginning...
+                    Logit Data                    
+==================================================
+Attribute       Type         Levels
+-----------------------------------
+Attribute 1    Part Worth      2
+Attribute 2    Part Worth      2
+Attribute 3    Part Worth      4
+Attribute 4    Part Worth      3
+Attribute 5    Part Worth      4
+
+10 parameters to be estimated.
+
+1001 total units.
+Average of 3 alternatives in each of 16 sets per unit.
+16016 tasks in total.
+
+Table of choice data pooled across units:
+Choice  Count   Pct.
+--------------------
+   1    5283   32.99%
+   2    5351   33.41%
+   3    5382   33.6%
+
+      MCMC Inference for Hierarchical Logit       
+==================================================
+Total Iterations:          4000
+Draws used in estimation:  3500
+Units:                     1001
+Parameters per unit:       10
+Constraints not in effect.
+Draws are to be saved.
+Prior degrees of freedom:  5
+Prior variance:            2
+
+MCMC Iteration Beginning...
+Iteration  Acceptance   RLH     Pct. Cert.   Avg. Var.   RMS     Time to End
+      100  0.377        0.389   0.132        0.06        0.19    1:50  
+      200  0.300        0.450   0.265        0.13        0.41    1:47  
+      300  0.303        0.480   0.328        0.18        0.56    1:44  
+      400  0.304        0.494   0.357        0.23        0.65    1:41  
+      500  0.303        0.501   0.370        0.26        0.72    1:39  
+      600  0.306        0.504   0.375        0.28        0.76    1:36  
+      700  0.305        0.503   0.375        0.28        0.76    1:33  
+      800  0.304        0.506   0.380        0.30        0.78    1:31  
+      900  0.301        0.506   0.381        0.30        0.79    1:28  
+     1000  0.303        0.506   0.381        0.29        0.78    1:28  
+     1100  0.301        0.507   0.381        0.29        0.78    1:28  
+     1200  0.304        0.507   0.382        0.29        0.78    1:27  
+     1300  0.310        0.506   0.381        0.29        0.78    1:24  
+     1400  0.299        0.506   0.379        0.30        0.79    1:20  
+     1500  0.302        0.506   0.380        0.30        0.79    1:17  
+     1600  0.301        0.507   0.382        0.31        0.79    1:14  
+     1700  0.306        0.507   0.381        0.30        0.78    1:11  
+     1800  0.304        0.506   0.380        0.30        0.78    1:08  
+     1900  0.305        0.506   0.380        0.30        0.79    1:05  
+     2000  0.304        0.507   0.382        0.30        0.79    1:02  
+     2100  0.298        0.506   0.380        0.29        0.79    0:59  
+     2200  0.300        0.506   0.379        0.29        0.79    0:55  
+     2300  0.303        0.505   0.378        0.30        0.79    0:52  
+     2400  0.301        0.507   0.382        0.30        0.79    0:49  
+     2500  0.301        0.507   0.382        0.30        0.78    0:46  
+     2600  0.302        0.507   0.381        0.30        0.78    0:43  
+     2700  0.304        0.507   0.382        0.31        0.80    0:40  
+     2800  0.300        0.505   0.379        0.30        0.80    0:37  
+     2900  0.301        0.506   0.381        0.30        0.79    0:34  
+     3000  0.298        0.506   0.379        0.29        0.78    0:31  
+     3100  0.304        0.505   0.378        0.28        0.77    0:28  
+     3200  0.303        0.506   0.379        0.29        0.77    0:25  
+     3300  0.298        0.507   0.382        0.29        0.77    0:22  
+     3400  0.306        0.507   0.381        0.30        0.78    0:19  
+     3500  0.307        0.505   0.379        0.29        0.78    0:16  
+     3600  0.302        0.505   0.378        0.29        0.77    0:12  
+     3700  0.307        0.506   0.380        0.29        0.78    0:09  
+     3800  0.304        0.504   0.377        0.29        0.78    0:06  
+     3900  0.304        0.505   0.378        0.28        0.77    0:03  
+     4000  0.301        0.506   0.380        0.29        0.78    0:00  
+
+Total Time Elapsed: 2:05
+
+Writing estimated unit-level betas to Rbetas.csv in the working directory
+
