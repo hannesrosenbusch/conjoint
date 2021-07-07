@@ -5,7 +5,7 @@ account: rosenbusch
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4269880
-bundleId: 4793805
+bundleId: 4794723
 url: https://rosenbusch.shinyapps.io/conjoint_app/
-when: 1625613196.93645
-lastSyncTime: 1625613196.93645
+when: 1625642543.94261
+lastSyncTime: 1625642543.94261
