@@ -21,6 +21,7 @@ library(shinythemes)
 library(shinyWidgets)
 library(ggplot2)
 library(gridExtra)
+library(conjoint)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("cerulean"),
