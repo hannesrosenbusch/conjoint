@@ -19,9 +19,9 @@ library(grid)
 library(shiny)
 library(shinythemes)
 library(shinyWidgets)
-library(conjoint)
 library(ggplot2)
 library(gridExtra)
+library(conjoint)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("cerulean"),
@@ -183,11 +183,12 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
 #server 
 server <- function(input, output) {
   
-  #hanneshelpers contains 4 custom functions:
+  #hanneshelpers contains 5 custom functions:
   #1.[resample_without_creating_duplicates] shuffles the order of choices within orthogonal piles of profiles
   #2.[mix_match] creates additional piles from initial orthogonal subset and calls function 1 to create choice sets
   #3.[plot_set] plots a choice set with profiles next to each other
   #4.[importance_utility_ranking] conducts bayesian multilevel MNL regression and outputs plots etc.
+  #5. [cust_choicemodelr] helperfunction for 4. which can deal with missing value designs
   source('hanneshelpers.R')
   
   #Panel 2; imgpaths for reading in images in later panels
@@ -425,10 +426,12 @@ server <- function(input, output) {
     #Panel 5, carry out analysis and return plots, insights of interest
     analysis <- eventReactive(input$analysisstart, {
       withProgress(message = 'Analyzing...', value = 0.5, {
+        print("ooh")
         key = data.table::fread(input$keydf$datapath, data.table = FALSE)
         admin = data.table::fread(input$admindf$datapath, data.table = FALSE)
         colnames(admin) = sapply(colnames(admin), function(x){substr(x, 1, min(12, nchar(x)))})
         admin = admin[, input$columns]
+        print(dim(admin))
         r = importance_utility_ranking(df = admin,key = key, nr_profiles = 3, none_option = FALSE)})
         r})
 
