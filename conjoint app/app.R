@@ -1,3 +1,4 @@
+#test1
 #TO-DO LIST
 #image_labels -- done
 #PNG in ADDITION TO JPG -- done
@@ -41,12 +42,13 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     tabPanel("1. Make profiles", "In this step, you enter the attributes of the product on the left side in a comma separated list. An example is already filled in. 
                              Then you can enter the levels of each attribute below (notice commas vs semicolons in example). Please stick with attributes/levels resulting in matrices not bigger than 5x4 or 4x5. Verify your inputs on the right and click that button, friend. ",
                              tags$br(),
-                             sidebarPanel(
+                             tags$br(),
+                             sidebarPanel(style = "position: left; height: 580px; overflow-y:scroll",
                                tags$h3("Input:"),
                                textInput("txt1", "Names of attributes:", "Attractiveness, Smiling, Job, Politik, Hobby"),
-                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = "High, Low; Yes, No; Berater, Pfleger, Arbeitslos, Maler; Eher links,  Eher mittig, Eher rechts; Schwimmen, Tanzen, Lesen, Keine"),
+                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = "High, Low; Yes, No; Berater, Pfleger, Arbeitslos, Maler; Eher links,  Eher mittig, Eher rechts; Schwimmen, Tanzen, Lesen, Keine", height = "100px"),
                                actionButton("testimages", "Test images"),
-                               actionButton("some", "Make profile subset", class = "btn-primary"),
+                               actionButton("some", "Make profile subset", class = "btn-primary", style = "float:right"),
                                tags$br(),
                                tags$br(),
                                
@@ -88,7 +90,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                              You can also download individual sets if they require unique formatting. 
                              The download of sets will include a csv file with the analysis codes that will be required in step 5. Careful: Image decorations entered in this step only make profiles look nicer for participants. They are not analyzed in step 5.",
                              tags$br(),
-                             sidebarPanel(
+                             tags$br(),
+                             sidebarPanel(style = "position: left; height: 580px; overflow-y:scroll",
                                tags$h4("Aesthetics:"),
                                
                                #optional images
