@@ -295,7 +295,6 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof1)){decorpath = input$imgprof1$datapath
       }else{decorpath = NA}
       s = sets()
-      #imgs = imgpaths()
 
       set_plot = plot_set(s, as.integer(input$set_number), 1, aests()[[1]], decorpath, input$none_text, imgpaths())
 
@@ -411,42 +410,40 @@ server <- function(input, output) {
         tar(fname, fs)},
       contentType = "application/tar")
     
-    #Panel 5, boolean check if data was provided
+    #Panel 6, boolean check if data was provided
     output$adminnames_provided <- reactive({
       isTruthy(input$admindf) & isTruthy(input$keydf)})
     
-    #Panel 5; select columns from the admin dataframe
+    #Panel 6; select columns from the admin dataframe
     output$columnselector = renderUI({
       admin = data.table::fread(input$admindf$datapath, data.table = FALSE)
       colnames(admin) = sapply(colnames(admin), function(x){substr(x, 1, min(12, nchar(x)))})
       checkboxGroupInput("columns","Select columns containing profile choices",choices=colnames(admin),inline = T)})
     
-    #Panel 5, carry out analysis and return plots, insights of interest
+    #Panel 6, carry out analysis and return plots, insights of interest
     analysis <- eventReactive(input$analysisstart, {
       withProgress(message = 'Analyzing...', value = 0.5, {
-        print("ooh")
         key = data.table::fread(input$keydf$datapath, data.table = FALSE)
         admin = data.table::fread(input$admindf$datapath, data.table = FALSE)
         colnames(admin) = sapply(colnames(admin), function(x){substr(x, 1, min(12, nchar(x)))})
         admin = admin[, input$columns]
-        print(dim(admin))
         r = importance_utility_ranking(df = admin,key = key, nr_profiles = 3, none_option = FALSE)})
         r})
 
-    #Panel 5; importance plot
+    #Panel 6; importance plot
     output$importanceplot = renderPlot({
       req(input$analysisstart)
       analysis()[[1]]})
     
-    #Panel 5; utility plot
+    #Panel 6; utility plot
     output$utilityplot = renderPlot({
       req(input$analysisstart)
       analysis()[[2]]})
     
-    #Panel 5; utility top ranking
+    #Panel 6; utility top ranking
     output$bestprofiles <- renderTable({head(analysis()[[3]], 7)})
     
-    #Panel 5; utility bottom ranking
+    #Panel 6; utility bottom ranking
     output$worstprofiles <- renderTable({tail(analysis()[[3]], 7)})
 
     #only run when element is shown
