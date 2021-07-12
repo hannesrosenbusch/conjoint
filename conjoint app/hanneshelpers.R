@@ -137,23 +137,20 @@ list(profile_plot,none_plot)
 
 importance_utility_ranking = function(df, key, nr_profiles, none_option){
   
-  
-  
-  #library(ChoiceModelR)
   library(tidyr)
   library(ggplot2)
   key$Set = NULL
   df$ID = 1:nrow(df)
   nr_participants = nrow(df)
-  
   #long format with row per participant and set
   df = df %>% pivot_longer(-ID, names_to = "set", values_to = "answer")
-  #correct set variable
-  df$set = substr(df$answer,1,nchar(df$answer)-1)
   
   #format response variable
   df$y = substr(df$answer,nchar(df$answer), nchar(df$answer))
   df$y = tolower(df$y)
+  if("e" %in% df$y){none_option=T;df$y[df$y == "e"] = "d"
+  }else{none_option = F}
+  
   df$y = match(df$y, letters)
   df$answer = NULL
   df$set = rep(1:nrow(key), nrow(df)/nrow(key))
@@ -203,10 +200,9 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
       profile_choice = df$y[df$ID == long_df$ID[i] & df$set == long_df$sets[i]]
       
       long_df$y[i] = profile_choice}
-    
   }
   long_df$ID_set = NULL
-
+  
   #numerical coding of attribute levels
   colnames(long_df) = trimws(colnames(long_df))
   long_df[,colnames(long_df) %in% attribute_names] = sapply(long_df[,colnames(long_df) %in% attribute_names], function(x){as.numeric(factor(x))})
@@ -215,91 +211,122 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   xcoding = rep(0, nr_attributes)
   mcmc = list(R = 4000, use = 3500) 
   options = list(none=none_option, save=TRUE, keep=1)
-
+  
   out = cust_choicemodelr(long_df, xcoding, mcmc = mcmc, options = options)
+  # dim(out$betawrite)
   #average across mcmc samples to obtain coefficients for each participant
-  estbetas = apply(out$betadraw,c(1,2),mean) 
+  # estbetas = apply(out$betadraw,c(1,2),mean) 
   # low_betas = apply(out$betadraw,c(1,2),function(x){quantile(x, 0.05)})
   # high_betas = apply(out$betadraw,c(1,2),function(x){quantile(x, 0.95)})
-  
   #append coefficients for reference categories
   #    myestbetas = cbind(estbetas[,1:3],0-apply(estbetas[,1:3],1,sum),estbetas[,4:5],0-apply(estbetas[,4:5],1,sum), estbetas[,6:8],0-apply(estbetas[,6:8],1,sum), estbetas[,9], 0-estbetas[,9])
   #    high_betas = cbind(high_betas[,1:3],0-apply(high_betas[,1:3],1,sum),high_betas[,4:5],0-apply(high_betas[,4:5],1,sum), high_betas[,6:8],0-apply(high_betas[,6:8],1,sum), high_betas[,9], 0-high_betas[,9])
   #    low_betas = cbind(low_betas[,1:3],0-apply(low_betas[,1:3],1,sum),low_betas[,4:5],0-apply(low_betas[,4:5],1,sum), low_betas[,6:8],0-apply(low_betas[,6:8],1,sum), low_betas[,9], 0-low_betas[,9])
-  prev_index = 0
-  reduced_nr_levels = cumsum(nr_levels -1)
-  betas_per_attribute = c()
-  for(i in 1:length(reduced_nr_levels)){
-    betas_non_ref = estbetas[,(prev_index+1):reduced_nr_levels[i]]
-    if((prev_index+1)==reduced_nr_levels[i]){
-      beta_ref =  0 - betas_non_ref
-    }else{
-      beta_ref = 0 - apply(betas_non_ref,1,sum)} 
-    betas_attr = cbind(betas_non_ref, beta_ref )
-    betas_per_attribute = cbind(betas_per_attribute, betas_attr)
-    prev_index = reduced_nr_levels[i]}
+  # prev_index = 0
+  # reduced_nr_levels = cumsum(nr_levels -1)
+  # betas_per_attribute = c()
+  # for(i in 1:length(reduced_nr_levels)){
+  #   betas_non_ref = estbetas[,(prev_index+1):reduced_nr_levels[i]]
+  #   if((prev_index+1)==reduced_nr_levels[i]){
+  #     beta_ref =  0 - betas_non_ref
+  #   }else{
+  #     beta_ref = 0 - apply(betas_non_ref,1,sum)} 
+  #   betas_attr = cbind(betas_non_ref, beta_ref )
+  #   betas_per_attribute = cbind(betas_per_attribute, betas_attr)
+  #   prev_index = reduced_nr_levels[i]}
   
   #average coefficients across participants
-  betas = apply(betas_per_attribute, 2, mean)
-  names(betas) = NULL
-  # highs = apply(high_betas, 2, mean)
-  # lows = apply(low_betas, 2, mean)
-  
-  #assign attribute and level name to coefficient
-  all_levels = c()
-  all_attributes = c()
-  for(attr in attribute_names){
-    attr_levels = sort(unique(A_key[,attr]), decreasing = F)
-    all_levels = c(all_levels, attr_levels)
-    all_attributes = c(all_attributes, rep(attr, length(attr_levels)))}
+  # betas = apply(betas_per_attribute, 2, mean)
+  # names(betas) = NULL
+  # # highs = apply(high_betas, 2, mean)
+  # # lows = apply(low_betas, 2, mean)
+  # 
+  # #assign attribute and level name to coefficient
+  # all_levels = c()
+  # for(attr in attribute_names){
+  #   attr_levels = sort(unique(A_key[,attr]), decreasing = F)
+  #   all_levels = c(all_levels, attr_levels)}
   
   
-  result = as.data.frame(cbind(all_levels, betas, all_attributes))
-  result$betas = as.numeric(result$betas)
+  # result = as.data.frame(cbind(all_levels, betas, all_attributes))
+  # result$betas = as.numeric(result$betas)
   # result$highs = as.numeric(result$highs)
   # result$lows = as.numeric(result$lows)
   
+  betas = colMeans(out$betawrite)
+  cumu_nr_levels = cumsum(nr_levels)
   #prep dfs for plotting
   importance = c()
-  for(attr in attribute_names){
-    mini_b = min(result$betas[result$all_attributes == attr])
-    result$betas[result$all_attributes == attr] = result$betas[result$all_attributes == attr] - mini_b + 0.1
-    # result$highs[result$all_attributes == attr] = result$highs[result$all_attributes == attr] - mini_b + 0.1
-    # result$lows[result$all_attributes == attr] = result$lows[result$all_attributes == attr] - mini_b + 0.1
-    maxi_b = max(result$betas[result$all_attributes == attr])
-    importance = c(importance, maxi_b)}
-  importance_df = as.data.frame(cbind(attribute_names, importance))
-  importance_df$importance = as.numeric(importance_df$importance)
-  importance_df$importance = importance_df$importance /sum(importance_df$importance) *100
-  Encoding(result$all_attributes) = "UTF-8"
-  Encoding(result$all_levels) = "UTF-8"
-  Encoding(importance_df$attribute_names) = "UTF-8"
+  prev_index = 0
+  all_attributes = c()
+  all_levels = c()
+  for(i in 1:length(cumu_nr_levels)){
+    mini_b = min(betas[(prev_index+1):(cumu_nr_levels[i])])
+    maxi_b = max(betas[(prev_index+1):(cumu_nr_levels[i])])
+    
+    importance = c(importance, rep(maxi_b - mini_b, nr_levels[i]))
+    
+    all_attributes = c(all_attributes, rep(attribute_names[i], nr_levels[i]))
+    attr_levels = sort(unique(A_key[,attribute_names[i]]), decreasing = F)
+    all_levels = c(all_levels, attr_levels)
+    prev_index = cumu_nr_levels[i]}
+  
+  if(none_option){all_attributes = c(all_attributes, "None"); importance = c(importance, betas[length(betas)]); all_levels = c(all_levels, "None")}
+  
+  
+  plotting_df = as.data.frame(cbind(all_attributes, all_levels, importance, betas))
+  plotting_df$betas = as.numeric(plotting_df$betas)
+  
+  plotting_df$importance = as.numeric(plotting_df$importance)
+  plotting_df$importance = plotting_df$importance /sum(plotting_df$importance[plotting_df$all_attributes != "None" & !duplicated(plotting_df$all_attributes)]) *100
+  
+  Encoding(plotting_df$all_levels) = Encoding(plotting_df$all_attributes) = "UTF-8"
   
   #plot importance
-  importance_plot = ggplot(importance_df) + 
-    geom_bar(aes(x = reorder(attribute_names, -1*importance),y = importance, fill = attribute_names), stat = "identity", show.legend = FALSE) +
+  importance_plot = ggplot(plotting_df[!duplicated(plotting_df$all_attributes) & plotting_df$all_attributes != "None",]) + 
+    geom_bar(aes(x = reorder(all_attributes, -1*importance),y = importance, fill = reorder(all_attributes, -1*importance)), stat = "identity", show.legend = FALSE) +
     theme_bw() + labs(x = element_blank(), y = "Importance", title = "Importance of different attributes") + theme(text = element_text(size = 18))
   
+  
+  
   #plot utilities
-  utility_plot = ggplot(result) + 
-    geom_bar(aes(x = reorder(all_levels, betas), y = betas, fill = all_attributes), stat = "identity", show.legend = FALSE) +  
+  utility_plot = ggplot(plotting_df[plotting_df$all_attributes != "None",]) + 
+    geom_bar(aes(x = reorder(all_levels, -betas), y = betas, fill = all_attributes), stat = "identity", show.legend = FALSE) +  
     #geom_line(aes(x = reorder(all_levels, betas), y = betas, group = 1)) +
     #geom_errorbar(aes(x = reorder(all_levels, betas), ymin = lows, ymax = highs), width = 0.3) +
     facet_wrap(~all_attributes,  scales = "free_x") +
+    geom_hline(aes(yintercept = 0))+
     theme_bw() + labs(x = element_blank(), y = "Utilities", title = "Utilities of specific features")+ theme(text = element_text(size = 18))
   
   #make utility ranking
-  l1 = split(result$all_levels, result$all_attributes)
+  l1 = split(plotting_df$all_levels, plotting_df$all_attributes)
   all_profiles = expand.grid(l1)
   all_profiles = data.frame(lapply(all_profiles,  as.character))
-  sum(result$betas[result$all_levels %in% all_profiles[1,]])
+  all_profiles$None = NULL
   all_profiles["Utility"] = apply(all_profiles, 1, function(x){
-    sum(result$betas[result$all_levels %in% x])})
+    round(sum(plotting_df$betas[plotting_df$all_levels %in% x]), 3)})
   all_profiles = all_profiles[order(all_profiles$Utility, decreasing = T),]
   Rank = 1:nrow(all_profiles)
   all_profiles = cbind(Rank, all_profiles)
   rownames(all_profiles) = NULL
-  return(list(importance_plot, utility_plot, all_profiles))
+  
+  return(list(importance_plot, utility_plot, all_profiles, out$betawrite, plotting_df))
+}
+
+market_simulator = function(selected_profiles, betawrite, plotting_df){
+  #market simulator
+
+  one_hot_vector = apply(selected_profiles, 1, function(x){plotting_df$all_levels %in% x})
+
+  participant_scores = betawrite %*% one_hot_vector #none beta; out$betawrite
+  market_simulation = apply(participant_scores, 1, function(x){which.max(x)})
+  market_simulation = table(market_simulation)
+  market_simulation = market_simulation / sum(market_simulation) * 100
+  names(market_simulation) = paste("Option", selected_profiles$Rank)
+  pie(market_simulation, 
+      labels = paste0(names(market_simulation), " (",round(market_simulation), "%)"),
+      edges = 500,
+      main = "Artificial market simulation")
 }
 
 cust_choicemodelr <-function(data, xcoding, demos, prior, mcmc, constraints, options) {
@@ -1054,8 +1081,8 @@ cust_choicemodelr <-function(data, xcoding, demos, prior, mcmc, constraints, opt
   # WRITE RESPONDENT BETAS TO CSV FILE
   #
   betaout = betaout / use
-  betawrite = cbind(matrix(ID, ncol = 1), getEffectsCodedParameters(betaout, effectsmap, xcoding))
-  betanames = "ID"
+  betawrite = getEffectsCodedParameters(betaout, effectsmap, xcoding) #aaa cbind(matrix(ID, ncol = 1), getEffectsCodedParameters(betaout, effectsmap, xcoding))
+  betanames = c() #aaa  "ID"
   for (i in 1:natts) {
     for (j in 1:nlevels[i]) {
       betanames = c(betanames, paste("A", i, "B", j, sep = ""))
@@ -1068,10 +1095,10 @@ cust_choicemodelr <-function(data, xcoding, demos, prior, mcmc, constraints, opt
   
   if (save) { 
     switch(1 + 1 * constrain + 2 * drawdelta,
-           return(list(betadraw = betadraw, compdraw = compdraw, loglike = loglike)),
-           return(list(betadraw = betadraw, betadraw.c = betadraw.c, compdraw = compdraw, loglike = loglike)),
-           return(list(betadraw = betadraw, deltadraw = deltadraw, compdraw = compdraw, loglike = loglike)),
-           return(list(betadraw = betadraw, betadraw.c = betadraw.c, deltadraw = deltadraw, compdraw = compdraw, loglike = loglike))
+           return(list(betadraw = betadraw, compdraw = compdraw, loglike = loglike, betawrite = betawrite)),
+           return(list(betadraw = betadraw, betadraw.c = betadraw.c, compdraw = compdraw, loglike = loglike, betawrite = betawrite)),
+           return(list(betadraw = betadraw, deltadraw = deltadraw, compdraw = compdraw, loglike = loglike, betawrite = betawrite)),
+           return(list(betadraw = betadraw, betadraw.c = betadraw.c, deltadraw = deltadraw, compdraw = compdraw, loglike = loglike, betawrite = betawrite))
     )
   }
   else { return(NULL) }		 

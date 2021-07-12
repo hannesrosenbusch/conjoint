@@ -1,13 +1,13 @@
 #test1
 #TO-DO LIST
-#image_labels -- done
-#PNG in ADDITION TO JPG -- done
-#dpi variable for lower resolutuon pics -- done
-#insert images as attributes in step 1 -- done
-#plot_set to plot_profile  -- done
-#better isntructions  -- partly done
 #loading progress bar for stimuli plots
 #better aesthetics
+#identify efficiency leaks
+#panel 1 datatable with all sets instead of dataframe with orth
+#implement none-option in market simulator
+#credible intervals next to both plots
+#make self-check-list for panel 4 (before approving study in admin)
+#possibility to compare groups/segments
 
 #BIG-EXTENSION LIST
 #automatic linking between attributes and decorative pictures
@@ -20,6 +20,7 @@ library(grid)
 library(shiny)
 library(shinythemes)
 library(shinyWidgets)
+library(DT)
 library(ggplot2)
 library(gridExtra)
 library(conjoint)
@@ -154,7 +155,13 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     tabPanel("5. Analyze data",
                              fileInput(inputId = "keydf", label = "Upload analyses codes (downloaded during step 3)", multiple = FALSE, accept = c(".csv")),
                              fileInput(inputId = "admindf", label = "Upload raw data from admin", multiple = FALSE, accept = c(".csv")),
+                             
+                             
 
+                             
+                             
+                             
+                             
                              #display the columnselector and startbutton only when admindata was provided
                              conditionalPanel(
                                condition = "output.adminnames_provided",
@@ -166,8 +173,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                             tags$br(),
                             tags$br(),
                             tags$br(),
-                            tableOutput("bestprofiles"),
-                            tableOutput("worstprofiles")
+                            splitLayout(cellWidths = c("70%", "30%"), DTOutput("utilitytable"),  plotOutput("market_pie"))
                             ),
                     #last panel for extar info, FAQs etc.
                     tabPanel("Intro to conjoint", "Here, I will likely add a description of conjoint designs (what they are good for an how they work). For now, check out:",
@@ -443,11 +449,25 @@ server <- function(input, output) {
       req(input$analysisstart)
       analysis()[[2]]})
     
-    #Panel 6; utility top ranking
-    output$bestprofiles <- renderTable({head(analysis()[[3]], 7)})
+    output$utilitytable <- renderDT({ 
+      analysis()[[3]]    
+      }, options = list(pageLength = 8, dom = 't'), 
+      filter = list(position = 'top', clear = FALSE), selection =  list(selected =c(1,4,6)))   
     
-    #Panel 6; utility bottom ranking
-    output$worstprofiles <- renderTable({tail(analysis()[[3]], 7)})
+    selected_rows = reactive({input$utilitytable_rows_selected})
+    
+    output$market_pie = renderPlot({
+      req(input$utilitytable_rows_selected)
+      selected_profiles = analysis()[[3]][as.integer(selected_rows()),]
+      individuals_betas = analysis()[[4]]
+      plotting_df = analysis()[[5]]
+      market_simulator(selected_profiles, individuals_betas, plotting_df)})
+    
+    # #Panel 6; utility top ranking
+    # output$bestprofiles <- renderTable({head(analysis()[[3]], 7)})
+    # 
+    # #Panel 6; utility bottom ranking
+    # output$worstprofiles <- renderTable({tail(analysis()[[3]], 7)})
 
     #only run when element is shown
     outputOptions(output, 'adminnames_provided', suspendWhenHidden = FALSE)
