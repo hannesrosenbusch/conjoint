@@ -10,6 +10,7 @@
 #possibility to compare groups/segments
 
 #BIG-EXTENSION LIST
+#DOWNLOAD RESULTS.PPT BUTTON
 #automatic linking between attributes and decorative pictures
 #possibility to show 2 instead of 3 profiles
 #ranking conjoint
@@ -169,10 +170,29 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                actionButton("analysisstart", "Start analyses")                           
                                               ),
                             #plots and outputs
-                            splitLayout(cellWidths = c("50%", "50%"), plotOutput("importanceplot") ,  plotOutput("utilityplot")),
                             tags$br(),
                             tags$br(),
+                            tags$br(),                            
+
+                            splitLayout(cellWidths = c("70%", "30%"), plotOutput("importanceplot") ,  ""),#pending importance comparisons
                             tags$br(),
+                            tags$br(),
+                            tags$br(),                            
+                            tags$br(),
+                            tags$br(),                           
+                            tags$br(),
+                            tags$br(),                            
+                            tags$br(),
+                            splitLayout(cellWidths = c("70%", "30%"),plotOutput("utilityplot") ,  DTOutput("comparisontable")),
+                            tags$br(),
+                            tags$br(),
+                            tags$br(),                            
+                            tags$br(),
+                            tags$br(),                           
+                            tags$br(),
+                            tags$br(),                            
+                            tags$br(),
+
                             splitLayout(cellWidths = c("70%", "30%"), DTOutput("utilitytable"),  plotOutput("market_pie"))
                             ),
                     #last panel for extar info, FAQs etc.
@@ -431,7 +451,7 @@ server <- function(input, output) {
     
     #Panel 6, carry out analysis and return plots, insights of interest
     analysis <- eventReactive(input$analysisstart, {
-      withProgress(message = 'Analyzing...', value = 0.5, {
+      withProgress(message = 'Analyzing... (takes a few minutes)', value = 0.5, {
         key = data.table::fread(input$keydf$datapath, data.table = FALSE)
         admin = data.table::fread(input$admindf$datapath, data.table = FALSE)
         colnames(admin) = sapply(colnames(admin), function(x){substr(x, 1, min(12, nchar(x)))})
@@ -449,10 +469,15 @@ server <- function(input, output) {
       req(input$analysisstart)
       analysis()[[2]]})
     
+    
+    output$comparisontable <- renderDT({ 
+      analysis()[[6]]    
+    }, options = list(pageLength = 8))  
+    
+    
     output$utilitytable <- renderDT({ 
       analysis()[[3]]    
-      }, options = list(pageLength = 8, dom = 't'), 
-      filter = list(position = 'top', clear = FALSE), selection =  list(selected =c(1,4,6)))   
+      }, options = list(pageLength = 8, dom = 't'), selection =  list(selected =c(2,5,6)), rownames = F)   
     
     selected_rows = reactive({input$utilitytable_rows_selected})
     

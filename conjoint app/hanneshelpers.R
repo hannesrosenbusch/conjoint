@@ -136,7 +136,6 @@ list(profile_plot,none_plot)
 
 
 importance_utility_ranking = function(df, key, nr_profiles, none_option){
-  
   library(tidyr)
   library(ggplot2)
   key$Set = NULL
@@ -209,49 +208,10 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   #fit model with normal prior centered on zero with variance = 2
   long_df = as.matrix(long_df)
   xcoding = rep(0, nr_attributes)
-  mcmc = list(R = 4000, use = 3500) 
+  mcmc = list(R = 4000, use = 3000) 
   options = list(none=none_option, save=TRUE, keep=1)
   
   out = cust_choicemodelr(long_df, xcoding, mcmc = mcmc, options = options)
-  # dim(out$betawrite)
-  #average across mcmc samples to obtain coefficients for each participant
-  # estbetas = apply(out$betadraw,c(1,2),mean) 
-  # low_betas = apply(out$betadraw,c(1,2),function(x){quantile(x, 0.05)})
-  # high_betas = apply(out$betadraw,c(1,2),function(x){quantile(x, 0.95)})
-  #append coefficients for reference categories
-  #    myestbetas = cbind(estbetas[,1:3],0-apply(estbetas[,1:3],1,sum),estbetas[,4:5],0-apply(estbetas[,4:5],1,sum), estbetas[,6:8],0-apply(estbetas[,6:8],1,sum), estbetas[,9], 0-estbetas[,9])
-  #    high_betas = cbind(high_betas[,1:3],0-apply(high_betas[,1:3],1,sum),high_betas[,4:5],0-apply(high_betas[,4:5],1,sum), high_betas[,6:8],0-apply(high_betas[,6:8],1,sum), high_betas[,9], 0-high_betas[,9])
-  #    low_betas = cbind(low_betas[,1:3],0-apply(low_betas[,1:3],1,sum),low_betas[,4:5],0-apply(low_betas[,4:5],1,sum), low_betas[,6:8],0-apply(low_betas[,6:8],1,sum), low_betas[,9], 0-low_betas[,9])
-  # prev_index = 0
-  # reduced_nr_levels = cumsum(nr_levels -1)
-  # betas_per_attribute = c()
-  # for(i in 1:length(reduced_nr_levels)){
-  #   betas_non_ref = estbetas[,(prev_index+1):reduced_nr_levels[i]]
-  #   if((prev_index+1)==reduced_nr_levels[i]){
-  #     beta_ref =  0 - betas_non_ref
-  #   }else{
-  #     beta_ref = 0 - apply(betas_non_ref,1,sum)} 
-  #   betas_attr = cbind(betas_non_ref, beta_ref )
-  #   betas_per_attribute = cbind(betas_per_attribute, betas_attr)
-  #   prev_index = reduced_nr_levels[i]}
-  
-  #average coefficients across participants
-  # betas = apply(betas_per_attribute, 2, mean)
-  # names(betas) = NULL
-  # # highs = apply(high_betas, 2, mean)
-  # # lows = apply(low_betas, 2, mean)
-  # 
-  # #assign attribute and level name to coefficient
-  # all_levels = c()
-  # for(attr in attribute_names){
-  #   attr_levels = sort(unique(A_key[,attr]), decreasing = F)
-  #   all_levels = c(all_levels, attr_levels)}
-  
-  
-  # result = as.data.frame(cbind(all_levels, betas, all_attributes))
-  # result$betas = as.numeric(result$betas)
-  # result$highs = as.numeric(result$highs)
-  # result$lows = as.numeric(result$lows)
   
   betas = colMeans(out$betawrite)
   cumu_nr_levels = cumsum(nr_levels)
@@ -305,24 +265,82 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   all_profiles$None = NULL
   all_profiles["Utility"] = apply(all_profiles, 1, function(x){
     round(sum(plotting_df$betas[plotting_df$all_levels %in% x]), 3)})
-  all_profiles = all_profiles[order(all_profiles$Utility, decreasing = T),]
-  Rank = 1:nrow(all_profiles)
-  all_profiles = cbind(Rank, all_profiles)
-  rownames(all_profiles) = NULL
   
-  return(list(importance_plot, utility_plot, all_profiles, out$betawrite, plotting_df))
+  all_profiles = all_profiles[order(all_profiles$Utility, decreasing = T),]
+  if(tolower(plotting_df$all_levels[nrow(plotting_df)]) == "none"){
+    all_profiles = rbind(c(rep("-", (ncol(all_profiles)-1)), round(as.numeric(betas[length(betas)]), 3)), all_profiles)
+  }
+  all_profiles$Utility = as.numeric(all_profiles$Utility)
+  Rank = nrow(all_profiles) - rank(all_profiles$Utility - min(all_profiles$Utility)) + 1
+  all_profiles = cbind(Rank, all_profiles)
+  
+  
+  #coefficient comparisons
+  
+  
+  avg_betas_draws = apply(out$betadraw,c(2,3),mean) 
+  # avg_betas = apply(avg_betas_draws,1,mean) 
+  # low_betas = apply(avg_betas_draws,1,function(x){quantile(x, 0.05)})
+  # high_betas = apply(avg_betas_draws,1,function(x){quantile(x, 0.95)})
+  #append coefficients for reference categories
+  #    myestbetas = cbind(estbetas[,1:3],0-apply(estbetas[,1:3],1,sum),estbetas[,4:5],0-apply(estbetas[,4:5],1,sum), estbetas[,6:8],0-apply(estbetas[,6:8],1,sum), estbetas[,9], 0-estbetas[,9])
+  #    high_betas = cbind(high_betas[,1:3],0-apply(high_betas[,1:3],1,sum),high_betas[,4:5],0-apply(high_betas[,4:5],1,sum), high_betas[,6:8],0-apply(high_betas[,6:8],1,sum), high_betas[,9], 0-high_betas[,9])
+  #    low_betas = cbind(low_betas[,1:3],0-apply(low_betas[,1:3],1,sum),low_betas[,4:5],0-apply(low_betas[,4:5],1,sum), low_betas[,6:8],0-apply(low_betas[,6:8],1,sum), low_betas[,9], 0-low_betas[,9])
+  prev_index = 1
+  prev_r_index = 0
+  reduced_nr_levels = cumsum(nr_levels -1)
+  cs_nrlevels = cumsum(nr_levels)
+  within_attribute_beta_comparisons = data.frame(matrix(ncol = 0, nrow = 1))
+  
+  for(i in 1:length(nr_levels)){
+    
+    betas_non_ref = avg_betas_draws[(prev_r_index+1):(reduced_nr_levels[i]),] #2, 3500
+    
+    if((prev_r_index+1)==reduced_nr_levels[i]){
+      beta_ref =  0 - betas_non_ref                                       #3500
+      
+    }else{
+      beta_ref = 0 - apply(betas_non_ref,2,sum)}
+    
+    
+    betas_attr = rbind(betas_non_ref, beta_ref )
+    start = ifelse(i == 1, 1, cs_nrlevels[i-1]+1)
+    rownames(betas_attr) = all_levels[start:(cs_nrlevels[i])]
+    comparisons = combn(rownames(betas_attr), 2)
+    
+    for(c in 1:ncol(comparisons)){
+      comp = comparisons[,c]
+      percen = round(sum(betas_attr[comp[1],] > betas_attr[comp[2],])/ncol(betas_attr) *100, 1)
+      if(percen < 50){
+        percen = 100 - percen
+        within_attribute_beta_comparisons[paste(comp[2], ">", comp[1])] = paste0(percen, "%")
+      }else{
+        within_attribute_beta_comparisons[paste(comp[1], ">", comp[2])] = paste0(percen, "%")
+      }}
+    prev_r_index = reduced_nr_levels[i]
+    prev_index = cs_nrlevels[i]}
+  
+  
+  
+  
+  within_attribute_beta_comparisons = t(within_attribute_beta_comparisons)
+  Encoding(rownames(within_attribute_beta_comparisons)) = "UTF-8"
+  colnames(within_attribute_beta_comparisons) = "Probability of superiority"
+  
+  return(list(importance_plot, utility_plot, all_profiles, out$betawrite, plotting_df, within_attribute_beta_comparisons))
 }
 
 market_simulator = function(selected_profiles, betawrite, plotting_df){
   #market simulator
-
+  
+  #selected_profiles = all_profiles[107,];betawrite = out$betawrite #for testing function outside app
   one_hot_vector = apply(selected_profiles, 1, function(x){plotting_df$all_levels %in% x})
-
   participant_scores = betawrite %*% one_hot_vector #none beta; out$betawrite
   market_simulation = apply(participant_scores, 1, function(x){which.max(x)})
   market_simulation = table(market_simulation)
   market_simulation = market_simulation / sum(market_simulation) * 100
-  names(market_simulation) = paste("Option", selected_profiles$Rank)
+  names(market_simulation) = paste("Rank", selected_profiles$Rank)
+  
   pie(market_simulation, 
       labels = paste0(names(market_simulation), " (",round(market_simulation), "%)"),
       edges = 500,
