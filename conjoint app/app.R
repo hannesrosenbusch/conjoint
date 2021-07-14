@@ -27,10 +27,12 @@ library(conjoint)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("cerulean"),
+                tags$style(type="text/css", "body {padding-top: 65px;}"),
                 
                 #navbarpage includes all tabpanels of the UI
                 navbarPage(
-                    "Conjoint Analysis",
+                    "Conjoint Analysis", 
+                    position = "fixed-top",
                     
                     #Instruction panel
                     tabPanel("Instructions", "This online app is for research consultants of Appinio who want to run a study with a conjoint design.
@@ -47,7 +49,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                              sidebarPanel(style = "position: left; height: 580px; overflow-y:scroll",
                                tags$h3("Input:"),
                                textInput("txt1", "Names of attributes:", "Attractiveness, Smiling, Job, Politik, Hobby"),
-                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = "High, Low; Yes, No; Berater, Pfleger, Arbeitslos, Maler; Eher links,  Eher mittig, Eher rechts; Schwimmen, Tanzen, Lesen, Keine", height = "100px"),
+                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = " High, Low; Yes, No; Berater, Pfleger, Arbeitslos, Maler; Eher links, Eher mittig, Eher rechts; Schwimmen, Tanzen, Lesen, Keine", height = "100px"),
                                actionButton("testimages", "Test images"),
                                actionButton("some", "Make profile subset", class = "btn-primary", style = "float:right"),
                                tags$br(),
