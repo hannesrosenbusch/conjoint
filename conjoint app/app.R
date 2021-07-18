@@ -25,6 +25,7 @@ library(DT)
 library(ggplot2)
 library(gridExtra)
 library(conjoint)
+library(DoE.base)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("cerulean"),
@@ -47,10 +48,10 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                              tags$br(),
                              sidebarPanel(style = "position: left; height: 580px; overflow-y:scroll",
                                tags$h3("Input:"),
-                               textInput("txt1", "Names of attributes:", "Attractiveness, Smiling, Job, Politik, Hobby"),
-                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = "High, Low; Yes, No; Berater, Pfleger, Arbeitslos, Maler; Eher links,  Eher mittig, Eher rechts; Schwimmen, Tanzen, Lesen, Keine", height = "100px"),
+                               textInput("txt1", "Names of attributes:", "Filling, Price, Amount"),
+                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = "Vanilla, Strawberry, Kiwi; 0.50$, 1.50$,2.50$; 100g, 200g, 300g", height = "100px"),
                                actionButton("testimages", "Test images"),
-                               actionButton("some", "Make profile subset", class = "btn-primary", style = "float:right"),
+                               actionButton("some", "Confirm design", class = "btn-primary", style = "float:right"),
                                tags$br(),
                                tags$br(),
                                
@@ -72,13 +73,21 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                              mainPanel(
                                h4("Chosen attributes and levels"),
                                tableOutput("table"),
+                               tags$br(),
+                               tags$br(),
                                
-                               tableOutput("table2")
+                              textOutput("designmessage"), 
+                              tags$br(),
+                              tags$br(),
+                              tableOutput("betterdesigns"),
+                              tags$br(),
+                              tags$br(),
+                              textOutput("confirmationtext")
                                       ) 
                             ),
                     
                     #panel for inspecting the choice sets
-                    tabPanel("2. Make sets", "If you clicked on 'Make profile subset' in the previous step, the profile sets should appear here automatically. A profile set is a group of multiple (often three) profiles of which participants select one. Below, you see these profiles next to each other with one row containing all the information for one choice set.
+                    tabPanel("2. Make sets", "If you clicked on 'Confirm design' in the previous step, the profile sets should appear here automatically. A profile set is a group of multiple (often three) profiles of which participants select one. Below, you see these profiles next to each other with one row containing all the information for one choice set.
                              In the next step, you can design the choice sets for the participants.", 
                              mainPanel(
                                h4("Choice sets"),
@@ -90,7 +99,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     #Aesthetics input very awkward still
                     tabPanel("3. Make stimuli", "Here you can alter the format of all the choice sets simultaneously and download them in a compressed folder. 
                              You can also download individual sets if they require unique formatting. 
-                             The download of sets will include a csv file with the analysis codes that will be required in step 5. Careful: Image decorations entered in this step only make profiles look nicer for participants. They are not analyzed in step 5.",
+                             The download of sets will include a csv file with the analysis codes that will be required in step 5. Careful: Image decorations entered in this step only make profiles look nicer for participants. They are not analyzable in step 5.",
                              tags$br(),
                              tags$br(),
                              sidebarPanel(style = "position: left; height: 580px; overflow-y:scroll",
@@ -174,7 +183,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                             tags$br(),
                             tags$br(),                            
 
-                            splitLayout(cellWidths = c("70%", "30%"), plotOutput("importanceplot") ,  ""),#pending importance comparisons
+                            splitLayout(cellWidths = c("70%", "30%"), plotOutput("importanceplot") ,  DTOutput("importancetable")),#pending importance comparisons
                             tags$br(),
                             tags$br(),
                             tags$br(),                            
@@ -197,7 +206,10 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                             ),
                     #last panel for extar info, FAQs etc.
                     tabPanel("Intro to conjoint", "Here, I will likely add a description of conjoint designs (what they are good for an how they work). For now, check out:",
-                            tags$a(href="https://www.surveyking.com/help/conjoint-analysis-explained","Online explanation")
+                            tags$a(href="https://www.surveyking.com/help/conjoint-analysis-explained","Online explanation"),
+                            tags$br(),
+                            HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/zLrjEsXjoAA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            
                             )#end of tabpanels
                           )#end of navbarPage
 )#end of UI / fluidPage
@@ -216,6 +228,7 @@ server <- function(input, output) {
   #3.[plot_set] plots a choice set with profiles next to each other
   #4.[importance_utility_ranking] conducts bayesian multilevel MNL regression and outputs plots etc.
   #5. [cust_choicemodelr] helperfunction for 4. which can deal with missing value designs
+  
   source('hanneshelpers.R')
   
   #Panel 2; imgpaths for reading in images in later panels
@@ -251,40 +264,85 @@ server <- function(input, output) {
       dm = cbind(Image, dm)
     }
     dm[is.na(dm)] = ""
+    colnames(dm) = trimws(colnames(dm))
     dm
 })
   
   #Panel 2, outputs user inputs
-  output$table <- renderTable({v()})
+  output$table = renderTable({v()})
+  
+  
+  output$designmessage = renderText({
+    des = current_and_alternative_designs(v())
+    des[[3]]
+  })
+  
+  output$betterdesigns = renderTable({
+    des = current_and_alternative_designs(v())
+    out = des[[2]]
+    if(des[[3]] == "Good design!"){out = des[[1]]#out[des[[1]][1, "Design"],]
+    }else if(des[[3]] == "Larger, optimized designs available!"){out = rbind(des[[1]],des[[2]]); out = out[!duplicated(out$Design),]
+    }else {return(NULL)}
+    out
+  })
 
   #Panel 2; generates orthogonal subset using conjoint package
   orth = eventReactive(input$some, {
     dm = v()
-    dm[dm==''] = NA
-    experiment<-expand.grid(dm)
-    experiment=experiment[complete.cases(experiment),]
-    withProgress(message = 'Finding optimal subset', value = 0.5, {
-      caFactorialDesign(data=experiment,type="orthogonal", seed = 42)})
+    
+    dm = dm[,order(colSums(is.na(dm)), decreasing = T)]
+    dm_list = as.list(dm)
+    dm_list = removeListElemComplete(dm_list, "")
+    ddd = oa.design(factor.names = dm_list, columns = "min3", seed = 42)
+    
+    colnames(ddd) = gsub("X.", "", colnames(ddd) )
+    attributes(ddd)$design.info$type
+    ddd = as.data.frame(ddd)
+    if(attributes(ddd)$design.info$type == "full factorial"){ #here some AND checks 
+      dm[dm==''] = NA
+      experiment<-expand.grid(dm)
+      experiment=experiment[complete.cases(experiment),]
+      ddd = caFactorialDesign(data=experiment,type="orthogonal", seed = 42)
+    }
+    ddd
                                     })
-  #Panel 2; outputs orthogonal profiles
-  output$table2 <- renderTable({
-    Profile = 1:nrow(orth())
-    cbind(Profile, orth())})
-  
+
+  output$confirmationtext = renderText({req(sets())
+                                       "Please continue to the next step ('2. Make sets')"})
+
   #Panel 2-3; creates choice sets
   sets = eventReactive(input$some, {
-    piles = mix_match(orth())
-    pile1 = piles[[1]];pile2 = piles[[2]];pile3 = piles[[3]]
-    colnames(pile1) = paste(colnames(pile1), "a", sep = "_"); colnames(pile2) = paste(colnames(pile2), "b", sep ="_");colnames(pile3) = paste(colnames(pile3), "c", sep ="_")
-    sets = cbind(pile1,pile2,pile3)
-    sets["Set"] = 1:nrow(sets)
-    sets = sets[,c(ncol(sets),1:(ncol(sets)-1))]
+    
+    withProgress(message = 'Finding optimal subset', value = 0.25, {
+      temp = orth()
+      incProgress(0.5)
+      #print(head(temp))
+      piles = mix_match(temp)
+      pile1 = piles[[1]][colnames(v())];pile2 = piles[[2]][colnames(v())];pile3 = piles[[3]][colnames(v())]
+      colnames(pile1) = paste(colnames(pile1), "a", sep = "_"); colnames(pile2) = paste(colnames(pile2), "b", sep ="_");colnames(pile3) = paste(colnames(pile3), "c", sep ="_")
+      sets = cbind(pile1,pile2,pile3)
+      sets["Set"] = 1:nrow(sets)
+      #sets = sets[,c(ncol(sets),1:(ncol(sets)-1))]
+      incProgress(0.25)
+    })
+    
+    
+
     sets})
 
     #Panel 3; outputs choices sets
     output$table3 <- renderTable({
-      sets()
-    })
+      s = sets()
+      s$Set = NULL
+      nr_profiles = 3
+      nr_attributes = ncol(s)/nr_profiles
+      colnames(s) = gsub("_a", "", rep(colnames(s)[1:nr_attributes], nr_profiles))
+      
+      temp = rbind(s[,1:nr_attributes], s[,(nr_attributes+1):(2*nr_attributes)], s[,(2*nr_attributes +1):(3*nr_attributes)])
+      Set = sort(rep(1:nrow(s), 3))
+      temp = cbind (Set, temp)
+      temp 
+    }) 
 
     #Panel 4; collect chosen aesthetics
     aests = reactive({aest1 = c("font_size_vals" = as.integer(input$font_size_vals1), 
@@ -416,7 +474,7 @@ server <- function(input, output) {
             s[new_col_names] = "None"
             path <- "none.png"
             fs <- c(fs, path)
-            p = plot_set(s, 1, 1, aests()[[profile]], NA, input$none_text, imgpaths())[[2]]  
+            p = plot_set(s, 1, 1, aests()[[1]], NA, input$none_text, imgpaths())[[2]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }
           path = "ANALYSES CODES DO NOT DELETE.csv"
@@ -475,11 +533,18 @@ server <- function(input, output) {
     }, options = list(pageLength = 8))  
     
     
+    output$importancetable <- renderDT({ 
+      analysis()[[7]]    
+    }, options = list(pageLength = 8))   
+    
+    
     output$utilitytable <- renderDT({ 
       analysis()[[3]]    
-      }, options = list(pageLength = 8, dom = 't'), selection =  list(selected =c(2,5,6)), rownames = F)   
+      }, options = list(pageLength = 8, dom = 't'), selection =  list(selected =c(2,5,6)), filter = 'top',rownames = F)   
+    
     
     selected_rows = reactive({input$utilitytable_rows_selected})
+    
     
     output$market_pie = renderPlot({
       req(input$utilitytable_rows_selected)

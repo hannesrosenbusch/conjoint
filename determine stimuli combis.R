@@ -2,22 +2,98 @@ set.seed(42)
 library(conjoint) #version 1.41
 library(dplyr)
 library(ggplot2)
-price = as.factor(c('300$', '500$', '700$'))
-RAM = as.factor(c('4GB', '6GB', '8GB'))
-weight = as.factor(c('1KG', '2KG', '3KG'))
-display = as.factor(c('14inch', '16inch', '18inch'))
-#self_description = as.factor(c('1', '2'))
-# d = cbind.data.frame(attractiveness,
-#                  expression,
-#                  social_identity,
-#                  self_description)
+nr_att_and_lev = 6
+attributes_levels = list()
+  for(l in 1:nr_att_and_lev){
+  attributes_levels[[l]] = paste0(letters[l], 1:nr_att_and_lev)
+}
+attributes_levels = as.data.frame(attributes_levels, col.names = LETTERS[1:nr_att_and_lev])
+#source("C:/Users/hannesrosenbusch/Documents/introducing conjoint/conjoint app/hanneshelpers.R")
+load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck.RData") 
+designcheck4 = list()
+for(as in 3:nrow(attributes_levels)){
+  for(bs in 3:nrow(attributes_levels)){ 
+    for(cs in 4:nrow(attributes_levels)){ 
+      for(ds in 5:nrow(attributes_levels)){ 
+        for(see in 1:10){
 
-experiment<-expand.grid(
-  price,
-  RAM,
-  weight,
-  display
-  )
+            sdes = sort(c(as,bs, cs, ds))
+            nr_cards = 2*sum(sdes)
+            
+            current_design = paste(as.character(sdes), collapse = "x")
+            if(!current_design %in% names(designcheck4)){ 
+              #print(nr_cards)
+              print(current_design)
+             exper= expand.grid(attributes_levels[1:as,1], attributes_levels[1:bs,2], attributes_levels[1:cs,3], attributes_levels[1:ds,4])
+             print(nrow(exper))
+            design2=caFactorialDesign(data=exper,type="orthogonal", seed = 42)
+            
+            print(nrow(design2))}
+                      }
+        #designcheck4[current_design]= nrow(design2)
+            }}}}
+  beepr:beep()
+
+#save(designcheck4, file = "designcheck4.RData") 
+
+  load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck2.RData") 
+  load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck3.RData") 
+  load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck4.RData") 
+  load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck.RData") 
+  designchecks = c(designcheck2[order(names(designcheck2))],designcheck3[order(names(designcheck3))], designcheck4[order(names(designcheck4))], designcheck[order(names(designcheck))])
+  save(designchecks, file = "designchecks.Rdata")
+
+
+  
+  
+  
+
+
+bigger_design = function(x, current_design){
+  d = as.integer(unlist(strsplit(current_design, "x")))
+  if(length(d) == length(x)){
+    return(all(x >= d))
+  }else(return(FALSE))
+}
+
+current_and_alternative_designs = function(data){
+  current_design = paste(sort(apply(test, 2, function(x)length(x) - sum(is.na(x)))), collapse = "x")
+  if(current_design %in% names(designchecks)){
+  coded_dcheck = strsplit(names(designchecks), "x")
+  integer_dcheck = lapply(coded_dcheck,  as.integer)
+  better_designs = as.data.frame(unlist(designchecks[which(unlist(lapply(integer_dcheck, bigger_design, current_design = current_design)) & designchecks <= 48)]))
+  colnames(better_designs) = c("#Sets")
+  if(designchecks[current_design] <= 32){
+    message = "Good design!"
+  }else if(nrow(better_designs) > 0){
+    message = "Larger, optimized designs available!"
+  }else{message = "Design size threatens data quality"}
+  return(list(designchecks[current_design],better_designs, message))
+  }else{return(list(NULL, NULL, "Questionable design size"))}
+}
+
+
+load("designchecks.Rdata")
+test = data.frame(matrix(data = 1:4, nrow = 4, ncol = 3))
+test[4,3] = ""
+test[3:4,1] = ""
+
+
+current_and_alternative_designs(test)
+dm_list = as.list(test)
+dm_list = removeListElemComplete(dm_list, "")
+ddd = oa.design(nlevels = c(2,4,3))
+h = nrow(test) - colSums(test=="")
+ddd = oa.design(factor.names = dm_list, columns = "min3")
+
+attributes(ddd)$design.info$type
+
+for(i in 1:nrow(designs)){
+
+experiment<-expand.grid( attributes_levels[1:i, 1:j] )
+design = paste(rep(i, j))
+print(design)
+}
 
 design2=caFactorialDesign(data=experiment,type="orthogonal", seed = 42)#federov exchange algorithm
 colnames(design2) = c(  "price",

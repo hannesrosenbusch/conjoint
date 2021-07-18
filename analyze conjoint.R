@@ -174,9 +174,9 @@ prev_r_index = 0
 reduced_nr_levels = cumsum(nr_levels -1)
 cs_nrlevels = cumsum(nr_levels)
 within_attribute_beta_comparisons = data.frame(matrix(ncol = 0, nrow = 1))
-
+between_attribute_importance_comparisons = data.frame(matrix(ncol = 0, nrow = mcmc$use))
 for(i in 1:length(nr_levels)){
-
+  
   betas_non_ref = avg_betas_draws[(prev_r_index+1):(reduced_nr_levels[i]),] #2, 3500
   
   if((prev_r_index+1)==reduced_nr_levels[i]){
@@ -187,6 +187,7 @@ for(i in 1:length(nr_levels)){
   
   
   betas_attr = rbind(betas_non_ref, beta_ref )
+  between_attribute_importance_comparisons[attribute_names[i]] = apply(betas_attr, 2, function(x){max(x)-min(x)})
   start = ifelse(i == 1, 1, cs_nrlevels[i-1]+1)
   rownames(betas_attr) = all_levels[start:(cs_nrlevels[i])]
   comparisons = combn(rownames(betas_attr), 2)
@@ -198,13 +199,30 @@ for(i in 1:length(nr_levels)){
       percen = 100 - percen
       within_attribute_beta_comparisons[paste(comp[2], ">", comp[1])] = paste0(percen, "%")
     }else{
-    within_attribute_beta_comparisons[paste(comp[1], ">", comp[2])] = paste0(percen, "%")
+      within_attribute_beta_comparisons[paste(comp[1], ">", comp[2])] = paste0(percen, "%")
   }}
-    prev_r_index = reduced_nr_levels[i]
-    prev_index = cs_nrlevels[i]}
+  
+  prev_r_index = reduced_nr_levels[i]
+  prev_index = cs_nrlevels[i]}
 
 
-
-
+imp_comparisons = combn(colnames(between_attribute_importance_comparisons), 2)
+between_attribute_importance_comparisons_df = data.frame(matrix(ncol = 0, nrow = 1))
+for(i in 1:ncol(imp_comparisons)){
+  
+  comp = imp_comparisons[,i]
+  percen = round(sum(between_attribute_importance_comparisons[,comp[1]] > between_attribute_importance_comparisons[,comp[2]])/nrow(between_attribute_importance_comparisons) *100, 1)
+  if(percen < 50){
+    percen = 100 - percen
+  between_attribute_importance_comparisons_df[paste(comp[2], ">", comp[1])] = paste0(percen, "%")
+  }else{
+    between_attribute_importance_comparisons_df[paste(comp[1], ">", comp[2])] = paste0(percen, "%")
+  }
+  
+}
+between_attribute_importance_comparisons_df = t(between_attribute_importance_comparisons_df)
+Encoding(rownames(between_attribute_importance_comparisons_df )) = "UTF-8"
+colnames(between_attribute_importance_comparisons_df) = "Probability of higher importance"
 within_attribute_beta_comparisons = t(within_attribute_beta_comparisons)
-
+Encoding(rownames(within_attribute_beta_comparisons)) = "UTF-8"
+colnames(within_attribute_beta_comparisons) = "Probability of superiority"

@@ -1,3 +1,6 @@
+load("designchecks.Rdata")
+
+
 resample_without_creating_duplicates = function(piles, three = T){
   r_seed = 42
   pile1 = piles[[1]]
@@ -33,25 +36,40 @@ resample_without_creating_duplicates = function(piles, three = T){
 
 
 mix_match = function(pile1, third_pile = T){
+  
   pile1[] <- lapply(pile1, as.character)
+
   #make pile2
   smallest_overlap = 99999
   pile2 = pile1
   
   for(column in colnames(pile1)){
+    
     vals = sort(unique(pile1[,column]))
+    #print(vals)
     perms = DescTools::Permn(vals)
+
     for(p in 1:nrow(perms)){
       rec_vals = perms[p,]
+      # print(paste("recvals:", rec_vals))
+      # print(paste("vals", vals))
+      # print(paste("cnames p1", colnames(pile1)))
+      
       for(i in 1:length(vals)){
+        
         pile2[pile1[column] == vals[i],column] = rec_vals[i]
       }
+      # print(head(pile1))
+      # print(head(pile2))
       overlap = nrow(intersect(pile1, pile2))
+     
       if(overlap < smallest_overlap){smallest_overlap = overlap; best_pile2 = pile2}
       if(overlap == 0){break}
     }
   }
+
   piles = list(pile1, best_pile2)
+  
   #make pile 3
   if(third_pile){
     pile3 = pile2
@@ -291,7 +309,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   reduced_nr_levels = cumsum(nr_levels -1)
   cs_nrlevels = cumsum(nr_levels)
   within_attribute_beta_comparisons = data.frame(matrix(ncol = 0, nrow = 1))
-  
+  between_attribute_importance_comparisons = data.frame(matrix(ncol = 0, nrow = mcmc$use))
   for(i in 1:length(nr_levels)){
     
     betas_non_ref = avg_betas_draws[(prev_r_index+1):(reduced_nr_levels[i]),] #2, 3500
@@ -304,6 +322,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
     
     
     betas_attr = rbind(betas_non_ref, beta_ref )
+    between_attribute_importance_comparisons[attribute_names[i]] = apply(betas_attr, 2, function(x){max(x)-min(x)})
     start = ifelse(i == 1, 1, cs_nrlevels[i-1]+1)
     rownames(betas_attr) = all_levels[start:(cs_nrlevels[i])]
     comparisons = combn(rownames(betas_attr), 2)
@@ -317,17 +336,33 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
       }else{
         within_attribute_beta_comparisons[paste(comp[1], ">", comp[2])] = paste0(percen, "%")
       }}
+    
     prev_r_index = reduced_nr_levels[i]
     prev_index = cs_nrlevels[i]}
   
   
-  
-  
+  imp_comparisons = combn(colnames(between_attribute_importance_comparisons), 2)
+  between_attribute_importance_comparisons_df = data.frame(matrix(ncol = 0, nrow = 1))
+  for(i in 1:ncol(imp_comparisons)){
+    
+    comp = imp_comparisons[,i]
+    percen = round(sum(between_attribute_importance_comparisons[,comp[1]] > between_attribute_importance_comparisons[,comp[2]])/nrow(between_attribute_importance_comparisons) *100, 1)
+    if(percen < 50){
+      percen = 100 - percen
+      between_attribute_importance_comparisons_df[paste(comp[2], ">", comp[1])] = paste0(percen, "%")
+    }else{
+      between_attribute_importance_comparisons_df[paste(comp[1], ">", comp[2])] = paste0(percen, "%")
+    }
+    
+  }
+  between_attribute_importance_comparisons_df = t(between_attribute_importance_comparisons_df)
+  Encoding(rownames(between_attribute_importance_comparisons_df )) = "UTF-8"
+  colnames(between_attribute_importance_comparisons_df) = "Probability of higher importance"
   within_attribute_beta_comparisons = t(within_attribute_beta_comparisons)
   Encoding(rownames(within_attribute_beta_comparisons)) = "UTF-8"
   colnames(within_attribute_beta_comparisons) = "Probability of superiority"
   
-  return(list(importance_plot, utility_plot, all_profiles, out$betawrite, plotting_df, within_attribute_beta_comparisons))
+  return(list(importance_plot, utility_plot, all_profiles, out$betawrite, plotting_df, within_attribute_beta_comparisons, between_attribute_importance_comparisons_df))
 }
 
 market_simulator = function(selected_profiles, betawrite, plotting_df){
@@ -1120,4 +1155,58 @@ cust_choicemodelr <-function(data, xcoding, demos, prior, mcmc, constraints, opt
     )
   }
   else { return(NULL) }		 
+}
+
+
+bigger_design = function(x, current_design){
+  d = as.integer(unlist(strsplit(current_design, "x")))
+  if(length(d) == length(x)){
+    return(all(x >= d))
+  }else(return(FALSE))
+}
+
+current_and_alternative_designs = function(data){
+  
+  data = data[,order(colSums(is.na(data)), decreasing = T)]
+  data_list = as.list(data)
+  data_list = removeListElemComplete(data_list, "")
+  ddd = oa.design(factor.names = data_list, columns = "min3", seed = 42)
+  colnames(ddd) = gsub("X.", "", colnames(ddd) )
+  
+  current_design = paste(sort(apply(data, 2, function(x){length(x) - sum(x == "")})), collapse = "x")
+  
+  if(attributes(ddd)$design.info$type == "oa" & nrow(ddd) <= 48){
+    current = data.frame(c(current_design),c(nrow(ddd)))
+    colnames(current) = c("Design", "#Sets")
+    return(list(current,NULL, "Good design!"))
+  }else{
+
+  
+  if(current_design %in% names(designchecks)){
+    
+    coded_dcheck = strsplit(names(designchecks), "x")
+    integer_dcheck = lapply(coded_dcheck,  as.integer)
+    better_designs = as.data.frame(unlist(designchecks[which(unlist(lapply(integer_dcheck, bigger_design, current_design = current_design)) & designchecks <= 48)]))
+    better_designs = cbind(rownames(better_designs), better_designs)#
+    colnames(better_designs) = c("Design", "#Sets")
+    if(designchecks[current_design] <= 32){
+      message = "Good design!"
+    }else if(nrow(better_designs) > 0){
+      message = "Larger, optimized designs available!"
+    }else{message = "Design size threatens data quality"}
+    
+    current = as.data.frame(designchecks[current_design])
+    current = cbind(names(designchecks[current_design]), as.integer(designchecks[current_design]))
+    colnames(current) = c("Design", "#Sets")
+    return(list(current,better_designs, message))
+  }else{return(list(NULL, NULL, "Questionable design size"))}
+}}
+
+removeListElemComplete = function(inlist, elem_remove) {
+  removeListElem <- function(inlist,elem_remove){
+    outlist = lapply(inlist,setdiff,elem_remove)
+    outlist[lengths(outlist) > 0]
+  }
+  outlist = lapply(inlist, removeListElem, elem_remove = elem_remove)
+  outlist[lengths(outlist) > 0]
 }
