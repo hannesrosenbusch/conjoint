@@ -1,4 +1,4 @@
-load("designchecks.Rdata")
+load("all_designchecks.RData")
 
 
 resample_without_creating_duplicates = function(piles, three = T){
@@ -46,21 +46,15 @@ mix_match = function(pile1, third_pile = T){
   for(column in colnames(pile1)){
     
     vals = sort(unique(pile1[,column]))
-    #print(vals)
     perms = DescTools::Permn(vals)
 
     for(p in 1:nrow(perms)){
       rec_vals = perms[p,]
-      # print(paste("recvals:", rec_vals))
-      # print(paste("vals", vals))
-      # print(paste("cnames p1", colnames(pile1)))
-      
       for(i in 1:length(vals)){
         
         pile2[pile1[column] == vals[i],column] = rec_vals[i]
       }
-      # print(head(pile1))
-      # print(head(pile2))
+
       overlap = nrow(intersect(pile1, pile2))
      
       if(overlap < smallest_overlap){smallest_overlap = overlap; best_pile2 = pile2}
@@ -383,6 +377,7 @@ market_simulator = function(selected_profiles, betawrite, plotting_df){
 }
 
 cust_choicemodelr <-function(data, xcoding, demos, prior, mcmc, constraints, options) {
+  set.seed(42)
   callStop = function(message) { stop(message, call. = FALSE) }
   
   if (missing(data)) { callStop("data argument required") }
@@ -774,7 +769,6 @@ cust_choicemodelr <-function(data, xcoding, demos, prior, mcmc, constraints, opt
     
     good = (unif <= alpha)
     betadraw = oldbeta
-    #print(good)
     betadraw[good,] = newbeta[good,]
     if (!missing(constraints)) {
       betadraw.c = oldbeta.c
@@ -969,6 +963,7 @@ cust_choicemodelr <-function(data, xcoding, demos, prior, mcmc, constraints, opt
   acceptr.t = 0
   
   for (rep in 1:R) {
+    set.seed(rep)
     if (drawdelta) {
       mgout = rGibbs(oldbetas - demos %*% t(matrix(olddelta, ncol = nz)), mubar, Amu, nu, V)
       oldcomp = mgout
@@ -1166,15 +1161,14 @@ bigger_design = function(x, current_design){
 }
 
 current_and_alternative_designs = function(data){
-  
-  data = data[,order(colSums(is.na(data)), decreasing = T)]
+  data = data[,order(colSums(data==""), decreasing = T)]
   data_list = as.list(data)
   data_list = removeListElemComplete(data_list, "")
   ddd = oa.design(factor.names = data_list, columns = "min3", seed = 42)
   colnames(ddd) = gsub("X.", "", colnames(ddd) )
   
   current_design = paste(sort(apply(data, 2, function(x){length(x) - sum(x == "")})), collapse = "x")
-  
+
   if(attributes(ddd)$design.info$type == "oa" & nrow(ddd) <= 48){
     current = data.frame(c(current_design),c(nrow(ddd)))
     colnames(current) = c("Design", "#Sets")
@@ -1182,21 +1176,21 @@ current_and_alternative_designs = function(data){
   }else{
 
   
-  if(current_design %in% names(designchecks)){
-    
-    coded_dcheck = strsplit(names(designchecks), "x")
+  if(current_design %in% names(all_designchecks)){
+
+    coded_dcheck = strsplit(names(all_designchecks), "x")
     integer_dcheck = lapply(coded_dcheck,  as.integer)
-    better_designs = as.data.frame(unlist(designchecks[which(unlist(lapply(integer_dcheck, bigger_design, current_design = current_design)) & designchecks <= 48)]))
+    better_designs = as.data.frame(unlist(all_designchecks[which(unlist(lapply(integer_dcheck, bigger_design, current_design = current_design)) & all_designchecks <= 48)]))
     better_designs = cbind(rownames(better_designs), better_designs)#
     colnames(better_designs) = c("Design", "#Sets")
-    if(designchecks[current_design] <= 32){
-      message = "Good design!"
+    if(all_designchecks[current_design] <= 32){
+      message = "Good design!" 
     }else if(nrow(better_designs) > 0){
       message = "Larger, optimized designs available!"
     }else{message = "Design size threatens data quality"}
     
-    current = as.data.frame(designchecks[current_design])
-    current = cbind(names(designchecks[current_design]), as.integer(designchecks[current_design]))
+    current = as.data.frame(all_designchecks[current_design])
+    current = cbind(names(all_designchecks[current_design]), as.integer(all_designchecks[current_design]))
     colnames(current) = c("Design", "#Sets")
     return(list(current,better_designs, message))
   }else{return(list(NULL, NULL, "Questionable design size"))}

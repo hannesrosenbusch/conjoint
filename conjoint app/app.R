@@ -230,6 +230,8 @@ server <- function(input, output) {
   #5. [cust_choicemodelr] helperfunction for 4. which can deal with missing value designs
   
   source('hanneshelpers.R')
+  load("all_designchecks.RData")
+  
   
   #Panel 2; imgpaths for reading in images in later panels
   output$testimgs_provided <- reactive({input$testimages %% 2 == 1})
@@ -272,11 +274,13 @@ server <- function(input, output) {
   output$table = renderTable({v()})
   
   
+  #Panel 2, display hint how well current design works
   output$designmessage = renderText({
     des = current_and_alternative_designs(v())
     des[[3]]
   })
   
+  #Panel 2, display current, and potentially better, designs
   output$betterdesigns = renderTable({
     des = current_and_alternative_designs(v())
     out = des[[2]]
@@ -286,19 +290,19 @@ server <- function(input, output) {
     out
   })
 
-  #Panel 2; generates orthogonal subset using conjoint package
+  #Panel 2; generates orthogonal subset
   orth = eventReactive(input$some, {
     dm = v()
-    
-    dm = dm[,order(colSums(is.na(dm)), decreasing = T)]
+    dm = dm[,order(colSums(dm==""), decreasing = T)]
     dm_list = as.list(dm)
     dm_list = removeListElemComplete(dm_list, "")
     ddd = oa.design(factor.names = dm_list, columns = "min3", seed = 42)
-    
     colnames(ddd) = gsub("X.", "", colnames(ddd) )
-    attributes(ddd)$design.info$type
     ddd = as.data.frame(ddd)
-    if(attributes(ddd)$design.info$type == "full factorial"){ #here some AND checks 
+    cur_des = paste( (nrow(dm) - colSums(dm=="")), collapse = "x")
+    temp = all_designchecks[names(all_designchecks) == cur_des]
+    achievable_nr_sets = temp[which.min(unlist(temp))]
+    if(nrow(ddd) > achievable_nr_sets){ 
       dm[dm==''] = NA
       experiment<-expand.grid(dm)
       experiment=experiment[complete.cases(experiment),]
@@ -307,27 +311,22 @@ server <- function(input, output) {
     ddd
                                     })
 
+  #Panel 2; alert that user may continue
   output$confirmationtext = renderText({req(sets())
                                        "Please continue to the next step ('2. Make sets')"})
 
   #Panel 2-3; creates choice sets
   sets = eventReactive(input$some, {
-    
     withProgress(message = 'Finding optimal subset', value = 0.25, {
       temp = orth()
       incProgress(0.5)
-      #print(head(temp))
       piles = mix_match(temp)
       pile1 = piles[[1]][colnames(v())];pile2 = piles[[2]][colnames(v())];pile3 = piles[[3]][colnames(v())]
       colnames(pile1) = paste(colnames(pile1), "a", sep = "_"); colnames(pile2) = paste(colnames(pile2), "b", sep ="_");colnames(pile3) = paste(colnames(pile3), "c", sep ="_")
       sets = cbind(pile1,pile2,pile3)
       sets["Set"] = 1:nrow(sets)
-      #sets = sets[,c(ncol(sets),1:(ncol(sets)-1))]
       incProgress(0.25)
     })
-    
-    
-
     sets})
 
     #Panel 3; outputs choices sets
@@ -382,9 +381,7 @@ server <- function(input, output) {
       if(isTruthy(input$imgprof1)){decorpath = input$imgprof1$datapath
       }else{decorpath = NA}
       s = sets()
-
       set_plot = plot_set(s, as.integer(input$set_number), 1, aests()[[1]], decorpath, input$none_text, imgpaths())
-
       set_plot[[1]]
       }, width =200, height = 300)
     
@@ -419,7 +416,7 @@ server <- function(input, output) {
     output$singleset <- downloadHandler(
       filename = function() {
         paste("Choice set", input$set_number, Sys.Date(),".tar", sep=" ")},
-      content = function(fname) {
+        content = function(fname) {
         fs <- c()
         tmpdir <- tempdir()
         setwd(tmpdir)
@@ -553,11 +550,6 @@ server <- function(input, output) {
       plotting_df = analysis()[[5]]
       market_simulator(selected_profiles, individuals_betas, plotting_df)})
     
-    # #Panel 6; utility top ranking
-    # output$bestprofiles <- renderTable({head(analysis()[[3]], 7)})
-    # 
-    # #Panel 6; utility bottom ranking
-    # output$worstprofiles <- renderTable({tail(analysis()[[3]], 7)})
 
     #only run when element is shown
     outputOptions(output, 'adminnames_provided', suspendWhenHidden = FALSE)

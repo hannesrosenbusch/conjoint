@@ -12,12 +12,13 @@ attributes_levels = as.data.frame(attributes_levels, col.names = LETTERS[1:nr_at
 load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck.RData") 
 designcheck4 = list()
 for(as in 3:nrow(attributes_levels)){
-  for(bs in 3:nrow(attributes_levels)){ 
-    for(cs in 4:nrow(attributes_levels)){ 
+  for(bs in 5:nrow(attributes_levels)){ 
+    for(cs in 5:nrow(attributes_levels)){ 
       for(ds in 5:nrow(attributes_levels)){ 
-        for(see in 1:10){
+        
 
-            sdes = sort(c(as,bs, cs, ds))
+
+            sdes = sort(c(as,bs, cs,ds))
             nr_cards = 2*sum(sdes)
             
             current_design = paste(as.character(sdes), collapse = "x")
@@ -28,25 +29,73 @@ for(as in 3:nrow(attributes_levels)){
              print(nrow(exper))
             design2=caFactorialDesign(data=exper,type="orthogonal", seed = 42)
             
-            print(nrow(design2))}
-                      }
-        #designcheck4[current_design]= nrow(design2)
-            }}}}
+            print(nrow(design2))
+                      
+        designcheck4[current_design]= nrow(design2)
+            }}}}}
   beepr:beep()
 
-#save(designcheck4, file = "designcheck4.RData") 
+save(designcheck2, file = "designcheck2.RData") 
 
   load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck2.RData") 
   load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck3.RData") 
   load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck4.RData") 
-  load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck.RData") 
+  load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck5.RData") 
   designchecks = c(designcheck2[order(names(designcheck2))],designcheck3[order(names(designcheck3))], designcheck4[order(names(designcheck4))], designcheck[order(names(designcheck))])
   save(designchecks, file = "designchecks.Rdata")
 
 
   
+  load("designchecks.Rdata")
+  load("oa_designchecks.Rdata")
   
   
+all_designchecks =  c(designchecks, oa_designchecks)
+for(dupes in names(all_designchecks)[duplicated(names(all_designchecks))]){
+  candidates = all_designchecks[names(all_designchecks) == dupes]
+  all_designchecks[names(all_designchecks) == dupes] = candidates[which.min(candidates)]
+  print(all_designchecks[names(all_designchecks) == dupes])
+  }
+all_designchecks=all_designchecks[!duplicated(names(all_designchecks))]
+save(all_designchecks, file = "all_designchecks.RData")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 bigger_design = function(x, current_design){
