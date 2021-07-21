@@ -1,10 +1,7 @@
 #test1
 #TO-DO LIST
-#loading progress bar for stimuli plots
-#better aesthetics
+#Code cleaning and refactoring
 #identify efficiency leaks
-#panel 1 datatable with all sets instead of dataframe with orth
-#implement none-option in market simulator
 #credible intervals next to both plots
 #make self-check-list for panel 4 (before approving study in admin)
 #possibility to compare groups/segments
