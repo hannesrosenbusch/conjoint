@@ -256,7 +256,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   
   #plot importance
   importance_plot = ggplot(plotting_df[!duplicated(plotting_df$all_attributes) & plotting_df$all_attributes != "None",]) + 
-    geom_bar(aes(x = reorder(all_attributes, -1*importance),y = importance, fill = reorder(all_attributes, -1*importance)), stat = "identity", show.legend = FALSE) +
+    geom_bar(aes(x = reorder(all_attributes, -1*importance),y = importance, fill = all_attributes), stat = "identity", show.legend = FALSE) + # fill = reorder(all_attributes, -1*importance)), stat =
     theme_bw() + labs(x = element_blank(), y = "Importance", title = "Importance of different attributes") + theme(text = element_text(size = 18))
   
   
