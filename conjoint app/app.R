@@ -2,7 +2,6 @@
 #TO-DO LIST
 #Code cleaning and refactoring
 #identify efficiency leaks
-#credible intervals next to both plots
 #make self-check-list for panel 4 (before approving study in admin)
 #possibility to compare groups/segments
 
