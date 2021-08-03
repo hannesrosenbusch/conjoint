@@ -35,14 +35,14 @@ for(as in 3:nrow(attributes_levels)){
             }}}}}
   beepr:beep()
 
-save(designcheck2, file = "designcheck2.RData") 
+#save(designcheck2, file = "designcheck2.RData") 
 
   load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck2.RData") 
   load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck3.RData") 
   load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck4.RData") 
   load("C:/Users/hannesrosenbusch/Documents/introducing conjoint/designcheck5.RData") 
   designchecks = c(designcheck2[order(names(designcheck2))],designcheck3[order(names(designcheck3))], designcheck4[order(names(designcheck4))], designcheck[order(names(designcheck))])
-  save(designchecks, file = "designchecks.Rdata")
+  #save(designchecks, file = "designchecks.Rdata")
 
 
   

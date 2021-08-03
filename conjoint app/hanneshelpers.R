@@ -1169,7 +1169,7 @@ current_and_alternative_designs = function(data){
   
   current_design = paste(sort(apply(data, 2, function(x){length(x) - sum(x == "")})), collapse = "x")
 
-  if(attributes(ddd)$design.info$type == "oa" & nrow(ddd) <= 48){
+  if(nrow(ddd) <= all_designchecks[current_design]){
     current = data.frame(c(current_design),c(nrow(ddd)))
     colnames(current) = c("Design", "#Sets")
     return(list(current,NULL, "Good design!"))
