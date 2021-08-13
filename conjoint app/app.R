@@ -4,9 +4,10 @@
 #identify efficiency leaks
 #make self-check-list for panel 4 (before approving study in admin)
 #possibility to compare groups/segments
+#Check explanations and instructions (Pete)
 
 #BIG-EXTENSION LIST
-#DOWNLOAD RESULTS.PPT BUTTON
+#Improve DOWNLOAD RESULTS.PPT BUTTON (Pete)
 #automatic linking between attributes and decorative pictures
 #possibility to show 2 instead of 3 profiles
 #ranking conjoint
@@ -25,10 +26,12 @@ library(DoE.base)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("cerulean"),
+                tags$style(type="text/css", "body {padding-top: 65px;}"),
                 
                 #navbarpage includes all tabpanels of the UI
                 navbarPage(
                     "Conjoint Analysis",
+                    position = "fixed-top",
                     
                     #Instruction panel
                     tabPanel("Instructions", "This online app is for research consultants of Appinio who want to run a study with a conjoint design.
@@ -198,8 +201,12 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                             tags$br(),                            
                             tags$br(),
 
-                            splitLayout(cellWidths = c("70%", "30%"), DTOutput("utilitytable"),  plotOutput("market_pie"))
-                            ),
+                            splitLayout(cellWidths = c("70%", "30%"), DTOutput("utilitytable"),  plotOutput("market_pie")),
+                            tags$br(),
+                    
+                            downloadButton(outputId = "pptxdownload", label = "Download PPTX")
+                      ),
+                    
                     #last panel for extar info, FAQs etc.
                     tabPanel("Intro to conjoint", "Here, I will likely add a description of conjoint designs (what they are good for an how they work). For now, check out:",
                             tags$a(href="https://www.surveyking.com/help/conjoint-analysis-explained","Online explanation"),
@@ -545,7 +552,72 @@ server <- function(input, output) {
       individuals_betas = analysis()[[4]]
       plotting_df = analysis()[[5]]
       market_simulator(selected_profiles, individuals_betas, plotting_df)})
+
+    # Download Plots as PPTX
     
+    output$pptxdownload <- downloadHandler(
+      filename = function() {
+        "Conjoint_Results.pptx"
+      },
+      content = function(file) {
+        
+        pp_top10_utils <- flextable(head(analysis()[[3]], 10)) %>% 
+          colformat_num(col_keys = c("Rank", "Utility"), digits = 0) %>% 
+          width(width = 1.25) %>% 
+          height_all(height = 0.35) %>% 
+          theme_zebra() %>% 
+          align(align = "center", part = "all")
+        
+        pp_bot10_utils <- flextable(tail(analysis()[[3]], 10)) %>% 
+          colformat_num(col_keys = c("Rank", "Utility"), digits = 0) %>% 
+          width(width = 1.25) %>% 
+          height_all(height = 0.35) %>% 
+          theme_zebra() %>% 
+          align(align = "center", part = "all")
+        
+        
+        pp_download <- read_pptx() %>%
+          add_slide(layout = "Title and Content") %>%
+          
+          ph_with(
+            location = ph_location_type(type = "body"),
+            value = analysis()[[1]],
+          ) %>%
+          
+          add_slide(layout = "Title and Content") %>%
+          ph_with(
+            location = ph_location_type(type = "body"),
+            value = analysis()[[2]]
+            
+          ) %>%
+          
+          add_slide(layout = "Title and Content") %>%
+          
+          ph_with(
+            location = ph_location_type(type = "title"),
+            value = "Top 10 Profiles"
+          ) %>%
+          
+          ph_with(
+            location = ph_location_type(type = "body"),
+            value = pp_top10_utils
+          ) %>%
+          
+          add_slide(layout = "Title and Content") %>%
+          
+          ph_with(
+            location = ph_location_type(type = "title"),
+            value = "Bottom 10 Profiles"
+          ) %>%
+          
+          ph_with(
+            location = ph_location_type(type = "body"),
+            value = pp_bot10_utils
+          ) 
+        
+        print(pp_download, target = file)
+      }
+    )    
 
     #only run when element is shown
     outputOptions(output, 'adminnames_provided', suspendWhenHidden = FALSE)
