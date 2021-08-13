@@ -204,7 +204,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     tabPanel("Intro to conjoint", "Here, I will likely add a description of conjoint designs (what they are good for an how they work). For now, check out:",
                             tags$a(href="https://www.surveyking.com/help/conjoint-analysis-explained","Online explanation"),
                             tags$br(),
-                            HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/zLrjEsXjoAA" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+                            HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/hdMulkVCR-E" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
                             
                             )#end of tabpanels
                           )#end of navbarPage
