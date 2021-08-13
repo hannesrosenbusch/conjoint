@@ -23,6 +23,8 @@ library(ggplot2)
 library(gridExtra)
 library(conjoint)
 library(DoE.base)
+library(flextable)
+library(officer)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("cerulean"),
@@ -572,7 +574,7 @@ server <- function(input, output) {
           colformat_num(col_keys = c("Rank", "Utility"), digits = 0) %>% 
           width(width = 1.25) %>% 
           height_all(height = 0.35) %>% 
-          theme_zebra() %>% 
+          theme_zebra() #%>% 
           align(align = "center", part = "all")
         
         
