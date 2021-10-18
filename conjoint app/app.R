@@ -2,12 +2,10 @@
 #TO-DO LIST
 #Code cleaning and refactoring
 #identify efficiency leaks
-#make self-check-list for panel 4 (before approving study in admin)
-#possibility to compare groups/segments
 #Check explanations and instructions (Pete)
+#possibility to compare groups/segments
 
 #BIG-EXTENSION LIST
-#Improve DOWNLOAD RESULTS.PPT BUTTON (Pete)
 #automatic linking between attributes and decorative pictures
 #possibility to show 2 instead of 3 profiles
 #ranking conjoint
@@ -25,6 +23,7 @@ library(conjoint)
 library(DoE.base)
 library(flextable)
 library(officer)
+library(rvg)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("cerulean"),
@@ -49,8 +48,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                              tags$br(),
                              sidebarPanel(style = "position: left; height: 580px; overflow-y:scroll",
                                tags$h3("Input:"),
-                               textInput("txt1", "Names of attributes:", "Filling, Price, Amount"),
-                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = "Vanilla, Strawberry, Kiwi; 0.50$, 1.50$,2.50$; 100g, 200g, 300g", height = "100px"),
+                               textInput("txt1", "Names of attributes:", "Relleno, Precio, Sabor"),
+                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = " Fresa, Vainilla, Kiwi; 1.50, 2.50, 2; 100g, 200g, 300g", height = "100px"),
                                actionButton("testimages", "Test images"),
                                actionButton("some", "Confirm design", class = "btn-primary", style = "float:right"),
                                tags$br(),
@@ -167,10 +166,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                              fileInput(inputId = "keydf", label = "Upload analyses codes (downloaded during step 3)", multiple = FALSE, accept = c(".csv")),
                              fileInput(inputId = "admindf", label = "Upload raw data from admin", multiple = FALSE, accept = c(".csv")),
                              
-                             
 
-                             
-                             
                              
                              
                              #display the columnselector and startbutton only when admindata was provided
@@ -555,6 +551,10 @@ server <- function(input, output) {
       plotting_df = analysis()[[5]]
       market_simulator(selected_profiles, individuals_betas, plotting_df)})
 
+    #observeEvent(input$analysisstart, {
+
+    
+    
     # Download Plots as PPTX
     
     output$pptxdownload <- downloadHandler(
@@ -563,64 +563,69 @@ server <- function(input, output) {
       },
       content = function(file) {
         
-        pp_top10_utils <- flextable(head(analysis()[[3]], 10)) %>% 
-          colformat_num(col_keys = c("Rank", "Utility"), digits = 0) %>% 
-          width(width = 1.25) %>% 
-          height_all(height = 0.35) %>% 
-          theme_zebra() %>% 
+        pp_top10_utils <- flextable(head(analysis()[[3]], 10)) %>% #    pp_top10_utils <- flextable(head(analysis()[[3]], 10)) %>% 
+          colformat_num(col_keys = c("Rank", "Utility"), digits = 0) %>%
+          width(width = 1.25) %>%
+          height_all(height = 0.35) %>%
+          theme_zebra() %>%
+          align(align = "center", part = "all")
+
+        pp_bot10_utils <- flextable(tail(analysis()[[3]], 10))  %>% 
+          colformat_num(col_keys = c("Rank", "Utility"), digits = 0) %>%
+          width(width = 1.25) %>%
+          height_all(height = 0.35) %>%
+          theme_zebra() %>%
           align(align = "center", part = "all")
         
-        pp_bot10_utils <- flextable(tail(analysis()[[3]], 10)) %>% 
-          colformat_num(col_keys = c("Rank", "Utility"), digits = 0) %>% 
-          width(width = 1.25) %>% 
-          height_all(height = 0.35) %>% 
-          theme_zebra() #%>% 
-          align(align = "center", part = "all")
-        
+        pl1 = reactive({analysis()[[1]]})
+        imp_pl <- rvg::dml(ggobj = pl1())
+        pl2 = reactive({analysis()[[2]]})
+        u_pl <- rvg::dml(ggobj = pl2())
+
         
         pp_download <- read_pptx() %>%
           add_slide(layout = "Title and Content") %>%
           
           ph_with(
             location = ph_location_type(type = "body"),
-            value = analysis()[[1]],
+            value = imp_pl 
           ) %>%
-          
+
           add_slide(layout = "Title and Content") %>%
           ph_with(
             location = ph_location_type(type = "body"),
-            value = analysis()[[2]]
-            
+            value = u_pl
+          #   
           ) %>%
-          
+
           add_slide(layout = "Title and Content") %>%
-          
+
           ph_with(
             location = ph_location_type(type = "title"),
             value = "Top 10 Profiles"
           ) %>%
-          
+
           ph_with(
             location = ph_location_type(type = "body"),
             value = pp_top10_utils
           ) %>%
-          
+
           add_slide(layout = "Title and Content") %>%
-          
+
           ph_with(
             location = ph_location_type(type = "title"),
             value = "Bottom 10 Profiles"
           ) %>%
-          
+
           ph_with(
             location = ph_location_type(type = "body"),
             value = pp_bot10_utils
-          ) 
+          )
         
         print(pp_download, target = file)
       }
     )    
-
+    #})
     #only run when element is shown
     outputOptions(output, 'adminnames_provided', suspendWhenHidden = FALSE)
     outputOptions(output, 'testimgs_provided', suspendWhenHidden = FALSE)
