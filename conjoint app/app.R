@@ -14,8 +14,10 @@ library(jpeg)
 library(png)
 library(grid)
 library(shiny)
+library(shinyjs)
 library(shinythemes)
 library(shinyWidgets)
+library(tibble)
 library(DT)
 library(ggplot2)
 library(gridExtra)
@@ -35,10 +37,54 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                     position = "fixed-top",
                     
                     #Instruction panel
-                    tabPanel("Instructions", "This online app is for research consultants of Appinio who want to run a study with a conjoint design.
+                    tabPanel("Instructions", useShinyjs() ,"This online app is for research consultants of Appinio who want to run a study with a conjoint design.
                              On top of this page, you see the five required steps from Making Profiles to Analyzing Data.
                              Please always follow the steps in the right order, starting with 'Make profile subset' in step 1. 
-                             If you have questions, contact Hannes on Slack."
+                             If you have questions, contact Hannes on Slack.",
+                             
+
+                             #authentication https://towardsdatascience.com/r-shiny-authentication-incl-demo-app-a599b86c54f7
+                             tags$div(
+                               id = "login-basic", 
+                               style = "width: 500px; max-width: 100%; margin: 0 auto;",
+                               
+                               tags$div(
+                                 class = "well",
+                                 h4(class = "text-center", "Please login"),
+                                 p(class = "text-center", 
+                                   tags$small("First approach login form")
+                                 ),
+                                 
+                                 textInput(
+                                   inputId     = "ti_user_name_basic", 
+                                   label       = tagList(icon("user"), 
+                                                         "User Name"),
+                                   placeholder = "Enter user name"
+                                 ),
+                                 
+                                 passwordInput(
+                                   inputId     = "ti_password_basic", 
+                                   label       = tagList(icon("unlock-alt"), 
+                                                         "Password"), 
+                                   placeholder = "Enter password"
+                                 ), 
+                                 
+                                 tags$div(
+                                   class = "text-center",
+                                   actionButton(
+                                     inputId = "ab_login_button_basic", 
+                                     label = "Log in",
+                                     class = "btn-primary"
+                                   )
+                                 )
+                               )
+                             ),
+                             tags$br(),
+                             tags$br(),
+                             tags$br(),
+                             textOutput("login_feedback"),
+                             
+                             
                              ),
                     
                     #panel for user inputting attributes and levels
@@ -234,6 +280,37 @@ server <- function(input, output) {
   load("all_designchecks.RData")
   
   
+  
+  
+  user_base_basic_tbl <- tibble(
+    user_name = "appinio",
+    password  = "7umxJgk2Cd"
+  )
+  validate_password_basic <- eventReactive(input$ab_login_button_basic, {
+    validate <- FALSE
+    if (input$ti_user_name_basic == user_base_basic_tbl$user_name &&
+        input$ti_password_basic == user_base_basic_tbl$password )
+        {validate <- TRUE}
+  })
+    observeEvent(validate_password_basic(), {
+      shinyjs::hide(id = "login-basic")
+    })
+    
+    #login feedback
+    feedback <- eventReactive(input$ab_login_button_basic, {
+      req(input$ti_user_name_basic)
+      req(input$ti_password_basic )
+      if (input$ti_user_name_basic == user_base_basic_tbl$user_name &&
+          input$ti_password_basic == user_base_basic_tbl$password ){
+        "Login succeeded"
+      }else{"Login failed"}
+    })
+    output$login_feedback <- renderText({
+      feedback()})
+    
+  
+  
+  
   #Panel 2; imgpaths for reading in images in later panels
   output$testimgs_provided <- reactive({input$testimages %% 2 == 1})
   imgpaths <- reactive({
@@ -245,7 +322,12 @@ server <- function(input, output) {
     })
   
   #Panel 2; generates the dataframe that shows the user their inputs 
-  v = eventReactive(c(input$txt2,input$txt1, input$testimages, input$label_pic1, input$label_pic2, input$label_pic3, input$label_pic4, input$label_pic5, input$img1, input$img2, input$img3, input$img4, input$img5),{
+  v = eventReactive(c(validate_password_basic, input$txt2,input$txt1, input$testimages, input$label_pic1, input$label_pic2, input$label_pic3, input$label_pic4, input$label_pic5, input$img1, input$img2, input$img3, input$img4, input$img5),{
+    
+    
+    req(validate_password_basic())
+    
+    
     attribute_names = strsplit(input$txt1, ",")
     nr_attributes = length(attribute_names[[1]])
     attribute_levels_strings = strsplit(input$txt2, ";")
@@ -437,11 +519,6 @@ server <- function(input, output) {
           write.csv(s, path, row.names = F)
 
           for(profile in c(1,2,3)){
-            #super ugly, try pasting profile to variable name
-            # path1 = input$imgprof1$datapath
-            # path2 = input$imgprof2$datapath
-            # path3 = input$imgprof3$datapath
-            # decorpath = get(paste0(path, profile))
             if(profile == 1 & isTruthy(input$imgprof1)){decorpath = input$imgprof1$datapath
             }else if(profile == 2 & isTruthy(input$imgprof2)){decorpath = input$imgprof2$datapath
             }else if(profile == 3 & isTruthy(input$imgprof3)){decorpath = input$imgprof3$datapath
@@ -512,6 +589,10 @@ server <- function(input, output) {
         admin = data.table::fread(input$admindf$datapath, data.table = FALSE)
         colnames(admin) = sapply(colnames(admin), function(x){substr(x, 1, min(12, nchar(x)))})
         admin = admin[, input$columns]
+        #print(head(admin))
+        #print('')
+        #print('')
+        #print(head(key))
         r = importance_utility_ranking(df = admin,key = key, nr_profiles = 3, none_option = FALSE)})
         r})
 

@@ -164,10 +164,12 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   
   df$y = match(df$y, letters)
   df$answer = NULL
+  print(nrow(key))
+  print(nrow(df))
   df$set = rep(1:nrow(key), nrow(df)/nrow(key))
   #set.seed(42); df$y[is.na(df$y)] = apply(df[is.na(df$y),] ,1, function(x){sample(df$y[!is.na(df$y) & df$set == x['set']], 1)})
   
-  
+  print("A")
   #format column and attribute names
   colnames(key) = gsub("_a","",colnames(key));
   colnames(key) = gsub("_b","",colnames(key));
@@ -175,7 +177,8 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   if(nr_profiles > 3){colnames(key) = gsub("_d","",colnames(key))}
   colnames(key) =trimws(colnames(key))
   attribute_names =trimws(unique(colnames(key)[colnames(key) != 'Set']))
-  
+  print(attribute_names)
+  print("B")
   nr_attributes = length(attribute_names)
   
   #extract and count levels for attributes
@@ -183,26 +186,35 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   temp = key[,1:nr_attributes]
   nr_levels = sapply(X = temp, FUN = function(x){length(unique(x))})
   profile = sort(rep(1:nr_profiles, nrow(key)))
+  print("C")
   #put profiles of same set underneath each other (long format)
+  print(nr_attributes)
+  print(nr_profiles)
+  print(ncol(key))
   A_key = key[,1:nr_attributes]
+  print("C1")
   B_key = key[,(nr_attributes +1): (2* nr_attributes)]
+  print("C2")
   if(nr_profiles == 2){
     long_key = cbind(sets, profile, rbind(A_key, B_key))
   }else if(nr_profiles == 3){C_key = key[,(2* nr_attributes + 1): (3* nr_attributes)]
+  print("C3")
   long_key = cbind(sets, profile, rbind(A_key, B_key, C_key))
   }else if(nr_profiles == 4){D_key = key[,(3* nr_attributes + 1): (4* nr_attributes)]
   long_key = cbind(sets, profile, rbind(A_key, B_key, C_key, D_key))
   }else{stop("Too few/many profiles per set")}
-  
+  print("D")
   #go from all profiles to all profiles per participant in right format for choicemodelR
   long_key = long_key[order(long_key$sets),]
   long_df = long_key[rep(1:nrow(long_key), nr_participants),]
   ID = sort(rep(df$ID, (nr_profiles)), decreasing = F)
   long_df = cbind(ID, long_df)
+  print("E")
   #populate response variable in right way for choicemodelR
   long_df$y = NA
   long_df$ID_set = paste(long_df$ID, long_df$set, sep = "_")
   past_ID_set = 0
+  print("F")
   for(i in 1:nrow(long_df)){
     current_ID_set = long_df$ID_set[i]
     if(current_ID_set  == past_ID_set){long_df$y[i] = 0
@@ -213,7 +225,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
       long_df$y[i] = profile_choice}
   }
   long_df$ID_set = NULL
-  
+  print("G")
   #numerical coding of attribute levels
   colnames(long_df) = trimws(colnames(long_df))
   long_df[,colnames(long_df) %in% attribute_names] = sapply(long_df[,colnames(long_df) %in% attribute_names], function(x){as.numeric(factor(x))})
@@ -222,9 +234,10 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   xcoding = rep(0, nr_attributes)
   mcmc = list(R = 4000, use = 3000) 
   options = list(none=none_option, save=TRUE, keep=1)
-  
+  print("H")
+  #untilhere
   out = cust_choicemodelr(long_df, xcoding, mcmc = mcmc, options = options)
-  
+  print("I")
   betas = colMeans(out$betawrite)
   cumu_nr_levels = cumsum(nr_levels)
   #prep dfs for plotting
@@ -232,6 +245,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   prev_index = 0
   all_attributes = c()
   all_levels = c()
+  print("J")
   for(i in 1:length(cumu_nr_levels)){
     mini_b = min(betas[(prev_index+1):(cumu_nr_levels[i])])
     maxi_b = max(betas[(prev_index+1):(cumu_nr_levels[i])])
@@ -242,7 +256,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
     attr_levels = sort(unique(A_key[,attribute_names[i]]), decreasing = F)
     all_levels = c(all_levels, attr_levels)
     prev_index = cumu_nr_levels[i]}
-  
+  print("K")
   if(none_option){all_attributes = c(all_attributes, "None"); importance = c(importance, betas[length(betas)]); all_levels = c(all_levels, "None")}
   
   
@@ -253,7 +267,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   plotting_df$importance = plotting_df$importance /sum(plotting_df$importance[plotting_df$all_attributes != "None" & !duplicated(plotting_df$all_attributes)]) *100
   
   Encoding(plotting_df$all_levels) = Encoding(plotting_df$all_attributes) = "UTF-8"
-  
+  print("L")
   #plot importance
   importance_plot = ggplot(plotting_df[!duplicated(plotting_df$all_attributes) & plotting_df$all_attributes != "None",]) + 
     geom_bar(aes(x = reorder(all_attributes, -1*importance),y = importance, fill = all_attributes), stat = "identity", show.legend = FALSE) + # fill = reorder(all_attributes, -1*importance)), stat =
@@ -277,7 +291,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   all_profiles$None = NULL
   all_profiles["Utility"] = apply(all_profiles, 1, function(x){
     round(sum(plotting_df$betas[plotting_df$all_levels %in% x]), 3)})
-  
+  print("M")
   all_profiles = all_profiles[order(all_profiles$Utility, decreasing = T),]
   if(tolower(plotting_df$all_levels[nrow(plotting_df)]) == "none"){
     all_profiles = rbind(c(rep("-", (ncol(all_profiles)-1)), round(as.numeric(betas[length(betas)]), 3)), all_profiles)
