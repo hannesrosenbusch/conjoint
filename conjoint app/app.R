@@ -26,6 +26,7 @@ library(DoE.base)
 library(flextable)
 library(officer)
 library(rvg)
+library(openxlsx)
 
 # Define UI
 ui <- fluidPage(theme = shinytheme("cerulean"),
@@ -94,8 +95,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                              tags$br(),
                              sidebarPanel(style = "position: left; height: 580px; overflow-y:scroll",
                                tags$h3("Input:"),
-                               textInput("txt1", "Names of attributes:", "Relleno, Precio, Sabor"),
-                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = " Fresa, Vainilla, Kiwi; 1.50, 2.50, 2; 100g, 200g, 300g", height = "100px"),
+                               textInput("txt1", "Names of attributes:", "Flavor, Price, Topping"),
+                               textAreaInput(inputId = "txt2",  label = "Names of levels:", value = " Strawberry, Vanilla, Kiwi; 1.50€, 2.00€, 2.50€; Brittle, Caramel, Sprinkles", height = "100px"),
                                actionButton("testimages", "Test images"),
                                actionButton("some", "Confirm design", class = "btn-primary", style = "float:right"),
                                tags$br(),
@@ -248,7 +249,8 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                             splitLayout(cellWidths = c("70%", "30%"), DTOutput("utilitytable"),  plotOutput("market_pie")),
                             tags$br(),
                     
-                            downloadButton(outputId = "pptxdownload", label = "Download PPTX")
+                            downloadButton(outputId = "pptxdownload", label = "Download PPTX"),
+                            downloadButton(outputId = "xlsxdownload", label = "Download Utilities for Excel")
                       ),
                     
                     #last panel for extar info, FAQs etc.
@@ -268,6 +270,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
 
 #server 
 server <- function(input, output) {
+  set.seed(42)
   
   #hanneshelpers contains 5 custom functions:
   #1.[resample_without_creating_duplicates] shuffles the order of choices within orthogonal piles of profiles
@@ -375,6 +378,7 @@ server <- function(input, output) {
 
   #Panel 2; generates orthogonal subset
   orth = eventReactive(input$some, {
+    set.seed(42)
     dm = v()
     dm = dm[,order(colSums(dm==""), decreasing = T)]
     dm_list = as.list(dm)
@@ -400,6 +404,7 @@ server <- function(input, output) {
 
   #Panel 2-3; creates choice sets
   sets = eventReactive(input$some, {
+    set.seed(42)
     withProgress(message = 'Finding optimal subset', value = 0.25, {
       temp = orth()
       incProgress(0.5)
@@ -414,6 +419,7 @@ server <- function(input, output) {
 
     #Panel 3; outputs choices sets
     output$table3 <- renderTable({
+      set.seed(42)
       s = sets()
       s$Set = NULL
       nr_profiles = 3
@@ -463,6 +469,7 @@ server <- function(input, output) {
     output$plot1 = renderPlot({
       if(isTruthy(input$imgprof1)){decorpath = input$imgprof1$datapath
       }else{decorpath = NA}
+      set.seed(42)
       s = sets()
       set_plot = plot_set(s, as.integer(input$set_number), 1, aests()[[1]], decorpath, input$none_text, imgpaths())
       set_plot[[1]]
@@ -472,6 +479,7 @@ server <- function(input, output) {
     output$plot2 = renderPlot({
       if(isTruthy(input$imgprof2)){decorpath = input$imgprof2$datapath
       }else{decorpath = NA}
+      set.seed(42)
       s = sets()
       set_plot = plot_set(s, as.integer(input$set_number), 2, aests()[[2]], decorpath, input$none_text, imgpaths())
       set_plot[[1]]
@@ -481,6 +489,7 @@ server <- function(input, output) {
     output$plot3 = renderPlot({
       if(isTruthy(input$imgprof3)){decorpath = input$imgprof3$datapath
       }else{decorpath = NA}
+      set.seed(42)
       s = sets()
       set_plot = plot_set(s, as.integer(input$set_number), 3, aests()[[3]], decorpath, input$none_text, imgpaths())
       set_plot[[1]]
@@ -500,6 +509,7 @@ server <- function(input, output) {
       filename = function() {
         paste("Choice set", input$set_number, Sys.Date(),".tar", sep=" ")},
         content = function(fname) {
+        set.seed(42)
         fs <- c()
         tmpdir <- tempdir()
         setwd(tmpdir)
@@ -514,7 +524,7 @@ server <- function(input, output) {
             p = plot_set(s, 1, 1, aests()[[1]], NA, input$none_text, imgpaths())[[2]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }
-          path = "ANALYSES CODES DO NOT DELETE.csv"
+          path = paste0("AnalysesCodes_", format(Sys.time(), "%d.%b %H:%M"), ".csv")
           fs <- c(fs, path)
           write.csv(s, path, row.names = F)
 
@@ -552,7 +562,7 @@ server <- function(input, output) {
             p = plot_set(s, 1, 1, aests()[[1]], NA, input$none_text, imgpaths())[[2]]  
             ggsave(plot = p, file= path, height =9, width =6, units = "cm", dpi = as.numeric(input$resolut))
           }
-          path = "ANALYSES CODES DO NOT DELETE.csv"
+          path = paste0("AnalysesCodes_", format(Sys.time(), "%d.%b %H:%M"), ".csv")
           fs <- c(fs, path)
           write.csv(s, path, row.names = F)
           
@@ -605,7 +615,6 @@ server <- function(input, output) {
     output$utilityplot = renderPlot({
       req(input$analysisstart)
       analysis()[[2]]})
-    
     
     output$comparisontable <- renderDT({ 
       analysis()[[6]]    
@@ -705,7 +714,23 @@ server <- function(input, output) {
         
         print(pp_download, target = file)
       }
-    )    
+    )
+    
+    # Download Utilities for Excel
+    output$xlsxdownload <- downloadHandler(
+      filename = function() {
+        paste0("results", ".xlsx")
+      },
+      content = function(file) {
+        wb = createWorkbook()
+        addWorksheet(wb, "Sheet1")
+        writeData(wb,"Sheet1", analysis()[[3]])
+        
+        saveWorkbook(wb,file)
+      }
+    )
+    
+    
     #})
     #only run when element is shown
     outputOptions(output, 'adminnames_provided', suspendWhenHidden = FALSE)
