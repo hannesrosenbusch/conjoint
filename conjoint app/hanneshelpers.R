@@ -2,6 +2,7 @@ load("all_designchecks.RData")
 
 
 resample_without_creating_duplicates = function(piles, three = T){
+  set.seed(42)
   r_seed = 42
   pile1 = piles[[1]]
   best_pile2 = piles[[2]]
@@ -36,6 +37,7 @@ resample_without_creating_duplicates = function(piles, three = T){
 
 
 mix_match = function(pile1, third_pile = T){
+  set.seed(42)
   
   pile1[] <- lapply(pile1, as.character)
 
@@ -45,7 +47,7 @@ mix_match = function(pile1, third_pile = T){
   
   for(column in colnames(pile1)){
     
-    vals = sort(unique(pile1[,column]))
+    vals = unique(pile1[,column]) #removed sort
     perms = DescTools::Permn(vals)
 
     for(p in 1:nrow(perms)){
@@ -70,7 +72,7 @@ mix_match = function(pile1, third_pile = T){
     smallest_overlap = 99999
     
     for(column in colnames(pile1)){
-      vals = sort(unique(pile1[,column]))
+      vals = unique(pile1[,column]) #removed sort
       perms = DescTools::Permn(vals)
       for(p in 1:nrow(perms)){
         rec_vals = perms[p,]
@@ -91,6 +93,7 @@ mix_match = function(pile1, third_pile = T){
 
 
 plot_set = function(sets, set_number = 1, profile_number, aest, decorpath, none_text, imgs){
+  set.seed(42)
 sets['Set'] = NULL
 colnames(sets) = gsub('_a', '', colnames(sets));colnames(sets) = gsub('_b', '', colnames(sets));colnames(sets) = gsub('_c', '', colnames(sets))
 
@@ -268,16 +271,18 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   
   Encoding(plotting_df$all_levels) = Encoding(plotting_df$all_attributes) = "UTF-8"
   print("L")
+  
   #plot importance
   importance_plot = ggplot(plotting_df[!duplicated(plotting_df$all_attributes) & plotting_df$all_attributes != "None",]) + 
     geom_bar(aes(x = reorder(all_attributes, -1*importance),y = importance, fill = all_attributes), stat = "identity", show.legend = FALSE) + # fill = reorder(all_attributes, -1*importance)), stat =
+    geom_text(aes(x = reorder(all_attributes, -1*importance),y = importance, label=paste0(round(importance, 2), "%", sep=""), vjust=-0.25)) +
     theme_bw() + labs(x = element_blank(), y = "Importance", title = "Importance of different attributes") + theme(text = element_text(size = 18))
-  
   
   
   #plot utilities
   utility_plot = ggplot(plotting_df[plotting_df$all_attributes != "None",]) + 
-    geom_bar(aes(x = reorder(all_levels, -betas), y = betas, fill = all_attributes), stat = "identity", show.legend = FALSE) +  
+    geom_bar(aes(x = reorder(all_levels, -betas), y = betas, fill = all_attributes), stat = "identity", show.legend = FALSE) +
+    geom_text(aes(x = reorder(all_levels, -betas), y = betas, label=round(betas, 4), vjust=0.25)) +
     #geom_line(aes(x = reorder(all_levels, betas), y = betas, group = 1)) +
     #geom_errorbar(aes(x = reorder(all_levels, betas), ymin = lows, ymax = highs), width = 0.3) +
     facet_wrap(~all_attributes,  scales = "free_x") +
