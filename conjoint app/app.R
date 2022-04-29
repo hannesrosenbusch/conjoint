@@ -1,4 +1,3 @@
-#test1
 #TO-DO LIST
 #Code cleaning and refactoring
 #identify efficiency leaks
@@ -253,6 +252,61 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                             downloadButton(outputId = "xlsxdownload", label = "Download Utilities for Excel")
                       ),
                     
+                    tabPanel("6. Pricing",
+                    sidebarLayout(
+                      sidebarPanel(
+                    
+                      selectInput(inputId = "priceselect",
+                                label = "Price",
+                                choices = c("Nil"),
+                                multiple = FALSE
+                                ),
+                    
+#                      selectInput(inputId = "featselect",
+#                                label = "Select Feature",
+#                                choices = c("Nil"),
+ #                               multiple = TRUE
+#                    ),
+                    
+#                      sliderInput(inputID = "weight",
+#                                  label = "Adjust Weight",
+#                                  min = 0.01,
+#                                  max = 1,
+#                                  value = 1,
+#                                  step = 0.01,
+#                                  ticks = FALSE
+#                                  )),
+                      actionBttn("priceanalysis", label = "Calculate", style = "jelly", size = "sm", color = "primary" )
+                    ),
+                    
+                      mainPanel(
+#                        fluidRow(
+#                          splitLayout(
+#    
+#                            conditionalPanel(
+#                              condition = "feat_counter() > 0",
+#                              selectizeInput("featselect1", label = "Select Feature 1", choices = "NIL", width = "150px", multiple = TRUE, options = list(maxItems = 2))),
+#                            conditionalPanel(
+#                              condition = "output.hidecond > 1",
+#                              selectizeInput("featselect2", label = "Select Feature 2", choices = "NIL", width = "150px", multiple = TRUE, options = list(maxItems = 2))),
+#                            conditionalPanel(
+#                              condition = "feat_counter() > 2",
+#                              selectizeInput("featselect3", label = "Select Feature 3", choices = "NIL", width = "150px", multiple = TRUE, options = list(maxItems = 2))),
+#                            conditionalPanel(
+#                              condition = "feat_counter() > 3",
+#                              selectizeInput("featselect4", label = "Select Feature 4", choices = "NIL", width = "150px", multiple = TRUE, options = list(maxItems = 2))),
+#                            
+#                            tags$head(tags$style(HTML("
+#                              .shiny-split-layout > div {
+#                                overflow: visible;
+#                              }")))
+#                          ) # end splitLayout
+#                          ), # end fluidRow
+                        textOutput("infotext"),
+                        DT::dataTableOutput("text")
+                      ) # end main panel
+      ) # end sidebarLayout
+    ), # end tabPanel 6
                     #last panel for extar info, FAQs etc.
                     tabPanel("Intro to conjoint", "Here, I will likely add a description of conjoint designs (what they are good for an how they work). For now, check out:",
                             tags$a(href="https://www.surveyking.com/help/conjoint-analysis-explained","Online explanation"),
@@ -269,7 +323,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
 
 
 #server 
-server <- function(input, output) {
+server <- function(input, output, session) {
   set.seed(42)
   
   #hanneshelpers contains 5 custom functions:
@@ -281,8 +335,6 @@ server <- function(input, output) {
   
   source('hanneshelpers.R')
   load("all_designchecks.RData")
-  
-  
   
   
   user_base_basic_tbl <- tibble(
@@ -518,7 +570,7 @@ server <- function(input, output) {
           if(input$incl_none){
             attr_names = colnames(s)[grepl("_a", colnames(s))]
             new_col_names = gsub("_a", "_d",attr_names)
-            s[new_col_names] = "None"
+            # removed "s[new_col_names] = "None""
             path <- "none.png"
             fs <- c(fs, path)
             p = plot_set(s, 1, 1, aests()[[1]], NA, input$none_text, imgpaths())[[2]]  
@@ -556,7 +608,7 @@ server <- function(input, output) {
           if(input$incl_none){
             attr_names = colnames(s)[grepl("_a", colnames(s))]
             new_col_names = gsub("_a", "_d",attr_names)
-            s[new_col_names] = "None"
+            # removed "s[new_col_names] = "None""
             path <- "none.png"
             fs <- c(fs, path)
             p = plot_set(s, 1, 1, aests()[[1]], NA, input$none_text, imgpaths())[[2]]  
@@ -599,10 +651,10 @@ server <- function(input, output) {
         admin = data.table::fread(input$admindf$datapath, data.table = FALSE)
         colnames(admin) = sapply(colnames(admin), function(x){substr(x, 1, min(12, nchar(x)))})
         admin = admin[, input$columns]
-        #print(head(admin))
+        print(head(admin))
         #print('')
         #print('')
-        #print(head(key))
+        print(head(key))
         r = importance_utility_ranking(df = admin,key = key, nr_profiles = 3, none_option = FALSE)})
         r})
 
@@ -729,9 +781,111 @@ server <- function(input, output) {
         saveWorkbook(wb,file)
       }
     )
+    # Updating the SelectInputs from Panel 6 when starting Analysis
     
+    observeEvent(input$analysisstart, {
+      
+      plotting_df = analysis()[[5]]
+      updateSelectInput(session, "priceselect", label = "Select Price", choices = unique(plotting_df$all_attributes))
+    })
     
-    #})
+    # Calculates the Worth of 1 Utility on selecting the Price
+    
+    rea_val <- reactiveVal(NULL)
+    
+    observeEvent(input$priceselect, {
+      
+      plotting_df = analysis()[[5]]
+
+      
+      df_price <- subset(plotting_df, all_attributes == input$priceselect)
+      df_price$betas <- as.numeric(df_price$betas)
+      df_price$all_levels <- as.numeric(gsub("[^[:digit:].,]","",(df_price$all_levels)))
+      
+      validate(
+        need(sum(is.na(df_price$all_levels)) == 0, "Variable needs to be numeric")
+      )
+      
+      model <- lm(data = df_price, all_levels~betas)
+      
+      inc_per_util <- model$coefficients['betas']*(-1)
+      
+      rea_val(inc_per_util)
+      
+      print(rea_val())
+    })
+ 
+#    here starts the price analysis part:
+#    - read the required data and drop the price attribute
+#    - goal is a datatable that displays all comparisons among the attribute levels and the price increases
+
+    observeEvent(input$priceanalysis, {
+      
+      pricing = analysis()[[5]]
+      pricing = subset(pricing, all_attributes != input$priceselect)
+      
+      # this part creates a list, loops through all attributes and stores the combinations and price increases in it
+      lister_the_tormentor = list()
+
+      for(j in unique(pricing$all_attributes)) {
+        
+        df <- subset(pricing, all_attributes == j)
+        df$all_levels <- trimws(df$all_levels)
+        df$worth <- df$betas*rea_val()
+        df <- df[order(df$worth, decreasing = TRUE),]
+        
+        df_lists_comb <- expand(df,
+                                nesting(all_attributes, all_levels, worth),
+                                nesting(feature_2 = all_levels, b = worth))
+
+        df_lists_comb <- df_lists_comb[order(df_lists_comb$worth, decreasing = TRUE),]
+
+        df_lists_comb <- subset(df_lists_comb, all_levels != feature_2)
+        
+        # this loop drops all duplicated pairs while keeping the levels sorted from highest to lowest utility
+        df_lists_comb$my_duplicated <- FALSE
+        for(i in 1:nrow(df_lists_comb)){
+          if(df_lists_comb$my_duplicated[i] == FALSE){
+            my_test <- df_lists_comb$feature_2 %in% df_lists_comb$all_levels[i] & df_lists_comb$all_levels %in% df_lists_comb$feature_2[i]
+            df_lists_comb$my_duplicated[my_test] <- TRUE
+          }
+        }
+
+        df_lists_comb <- df_lists_comb[!df_lists_comb$my_duplicated,]
+        df_lists_comb$my_duplicated <- NULL
+
+       lister_the_tormentor[[(j)]] <- df_lists_comb
+        
+      }
+
+      df_table <- do.call(rbind, lister_the_tormentor)
+      df_table$price_increase <- round(df_table[3] - df_table[5], 2)
+      df_table <- df_table[ , -which(names(df_table) %in% c("worth", "b"))]
+      
+      df_table <- plyr::rename(df_table,
+          c("all_levels" = "feature_1", 
+            "all_attributes" = "attribute"))
+      
+      output$infotext <- renderText({"Read the table from left to right: feature_1 compared to feature_2 is a price difference of xx. In these comparisons, feature_1 is always the more popular feature!"})
+
+      output$text <- DT::renderDataTable(
+        DT::datatable(
+          {df_table},
+          extensions = 'Buttons',
+          
+          options = list(
+            paging = FALSE,
+            searching = TRUE,
+            fixedColumns = TRUE,
+            autoWidth = TRUE,
+            ordering = TRUE,
+            dom = 'tBf',
+            buttons = c('copy', 'csv', 'excel')
+          ),
+          
+          class = "display")
+      )
+    })
     #only run when element is shown
     outputOptions(output, 'adminnames_provided', suspendWhenHidden = FALSE)
     outputOptions(output, 'testimgs_provided', suspendWhenHidden = FALSE)

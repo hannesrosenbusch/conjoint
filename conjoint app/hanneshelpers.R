@@ -158,7 +158,6 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   nr_participants = nrow(df)
   #long format with row per participant and set
   df = df %>% pivot_longer(-ID, names_to = "set", values_to = "answer")
-  
   #format response variable
   df$y = substr(df$answer,nchar(df$answer), nchar(df$answer))
   df$y = tolower(df$y)
@@ -228,6 +227,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
       long_df$y[i] = profile_choice}
   }
   long_df$ID_set = NULL
+  print(long_df)
   print("G")
   #numerical coding of attribute levels
   colnames(long_df) = trimws(colnames(long_df))
@@ -282,7 +282,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   #plot utilities
   utility_plot = ggplot(plotting_df[plotting_df$all_attributes != "None",]) + 
     geom_bar(aes(x = reorder(all_levels, -betas), y = betas, fill = all_attributes), stat = "identity", show.legend = FALSE) +
-    geom_text(aes(x = reorder(all_levels, -betas), y = betas, label=round(betas, 4), vjust=0.25)) +
+    geom_text(aes(x = reorder(all_levels, -betas), y = betas, label=round(betas, 2), vjust=0.25)) +
     #geom_line(aes(x = reorder(all_levels, betas), y = betas, group = 1)) +
     #geom_errorbar(aes(x = reorder(all_levels, betas), ymin = lows, ymax = highs), width = 0.3) +
     facet_wrap(~all_attributes,  scales = "free_x") +
@@ -1185,9 +1185,7 @@ current_and_alternative_designs = function(data){
   data_list = removeListElemComplete(data_list, "")
   ddd = oa.design(factor.names = data_list, columns = "min3", seed = 42)
   colnames(ddd) = gsub("X.", "", colnames(ddd) )
-  
   current_design = paste(sort(apply(data, 2, function(x){length(x) - sum(x == "")})), collapse = "x")
-
   if(nrow(ddd) <= all_designchecks[current_design]){
     current = data.frame(c(current_design),c(nrow(ddd)))
     colnames(current) = c("Design", "#Sets")
@@ -1207,7 +1205,6 @@ current_and_alternative_designs = function(data){
     }else if(nrow(better_designs) > 0){
       message = "Larger, optimized designs available!"
     }else{message = "Design size threatens data quality"}
-    
     current = as.data.frame(all_designchecks[current_design])
     current = cbind(names(all_designchecks[current_design]), as.integer(all_designchecks[current_design]))
     colnames(current) = c("Design", "#Sets")
