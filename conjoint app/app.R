@@ -261,47 +261,11 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                                 choices = c("Nil"),
                                 multiple = FALSE
                                 ),
-                    
-#                      selectInput(inputId = "featselect",
-#                                label = "Select Feature",
-#                                choices = c("Nil"),
- #                               multiple = TRUE
-#                    ),
-                    
-#                      sliderInput(inputID = "weight",
-#                                  label = "Adjust Weight",
-#                                  min = 0.01,
-#                                  max = 1,
-#                                  value = 1,
-#                                  step = 0.01,
-#                                  ticks = FALSE
-#                                  )),
+
                       actionBttn("priceanalysis", label = "Calculate", style = "jelly", size = "sm", color = "primary" )
                     ),
                     
                       mainPanel(
-#                        fluidRow(
-#                          splitLayout(
-#    
-#                            conditionalPanel(
-#                              condition = "feat_counter() > 0",
-#                              selectizeInput("featselect1", label = "Select Feature 1", choices = "NIL", width = "150px", multiple = TRUE, options = list(maxItems = 2))),
-#                            conditionalPanel(
-#                              condition = "output.hidecond > 1",
-#                              selectizeInput("featselect2", label = "Select Feature 2", choices = "NIL", width = "150px", multiple = TRUE, options = list(maxItems = 2))),
-#                            conditionalPanel(
-#                              condition = "feat_counter() > 2",
-#                              selectizeInput("featselect3", label = "Select Feature 3", choices = "NIL", width = "150px", multiple = TRUE, options = list(maxItems = 2))),
-#                            conditionalPanel(
-#                              condition = "feat_counter() > 3",
-#                              selectizeInput("featselect4", label = "Select Feature 4", choices = "NIL", width = "150px", multiple = TRUE, options = list(maxItems = 2))),
-#                            
-#                            tags$head(tags$style(HTML("
-#                              .shiny-split-layout > div {
-#                                overflow: visible;
-#                              }")))
-#                          ) # end splitLayout
-#                          ), # end fluidRow
                         textOutput("infotext"),
                         DT::dataTableOutput("text")
                       ) # end main panel
