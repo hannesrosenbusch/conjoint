@@ -2408,41 +2408,34 @@ current_and_alternative_designs = function(data){
   
   current_design = paste(sort(apply(data, 2, function(x){length(x) - sum(x == "")})), collapse = "x")
   print("h1")
-  if(current_design %in% names(all_designchecks)){  
+  if(nrow(ddd) <= all_designchecks[current_design]){
+    print("h2")
+    current = data.frame(c(current_design),c(nrow(ddd)))
+    colnames(current) = c("Design", "#Sets")
+    return(list(current,NULL, "Good design!"))
+  }else{
+    print("h3")
+
+  
+  if(current_design %in% names(all_designchecks)){
+
+    coded_dcheck = strsplit(names(all_designchecks), "x")
+    integer_dcheck = lapply(coded_dcheck,  as.integer)
+    better_designs = as.data.frame(unlist(all_designchecks[which(unlist(lapply(integer_dcheck, bigger_design, current_design = current_design)) & all_designchecks <= 48)]))
+    better_designs = cbind(rownames(better_designs), better_designs)#
+    colnames(better_designs) = c("Design", "#Sets")
+    if(all_designchecks[current_design] <= 32){
+      message = "Good design!" 
+    }else if(nrow(better_designs) > 0){
+      message = "Larger, optimized designs available!"
+    }else{message = "Design size threatens data quality"}
     
-    if(nrow(ddd) <= all_designchecks[current_design]){
-      print("h2")
-      current = data.frame(c(current_design),c(nrow(ddd)))
-      colnames(current) = c("Design", "#Sets")
-      return(list(current,NULL, "Good design!"))
-    }else{
-      print("h3")
-  
-    
-  
-      coded_dcheck = strsplit(names(all_designchecks), "x")
-      integer_dcheck = lapply(coded_dcheck,  as.integer)
-      better_designs = as.data.frame(unlist(all_designchecks[which(unlist(lapply(integer_dcheck, bigger_design, current_design = current_design)) & all_designchecks <= 48)]))
-      better_designs = cbind(rownames(better_designs), better_designs)#
-      colnames(better_designs) = c("Design", "#Sets")
-      if(all_designchecks[current_design] <= 32){
-        message = "Good design!" 
-      }else if(nrow(better_designs) > 0){
-        message = "Larger, optimized designs available!"
-      }else{message = "Design size threatens data quality"}
-      
-      current = as.data.frame(all_designchecks[current_design])
-      current = cbind(names(all_designchecks[current_design]), as.integer(all_designchecks[current_design]))
-      colnames(current) = c("Design", "#Sets")
-      return(list(current,better_designs, message))
-    }}else{
-      
-      current = data.frame(c(current_design),c(nrow(ddd)))
-      colnames(current) = c("Design", "#Sets")
-      return(list(current,NULL, "Good design!"))
-  
-}
-}
+    current = as.data.frame(all_designchecks[current_design])
+    current = cbind(names(all_designchecks[current_design]), as.integer(all_designchecks[current_design]))
+    colnames(current) = c("Design", "#Sets")
+    return(list(current,better_designs, message))
+  }else{return(list(NULL, NULL, "Questionable design size"))}
+}}
 
 removeListElemComplete = function(inlist, elem_remove) {
   removeListElem <- function(inlist,elem_remove){
