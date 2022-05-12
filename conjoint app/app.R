@@ -786,6 +786,7 @@ server <- function(input, output, session) {
     observeEvent(input$priceanalysis, {
       
       pricing = analysis()[[5]]
+      pricing = subset(pricing, all_attributes != "None") #Just a quick fix
       pricing = subset(pricing, all_attributes != input$priceselect)
       
       # this part creates a list, loops through all attributes and stores the combinations and price increases in it
@@ -812,9 +813,9 @@ server <- function(input, output, session) {
           if(df_lists_comb$my_duplicated[i] == FALSE){
             my_test <- df_lists_comb$feature_2 %in% df_lists_comb$all_levels[i] & df_lists_comb$all_levels %in% df_lists_comb$feature_2[i]
             df_lists_comb$my_duplicated[my_test] <- TRUE
+
           }
         }
-
         df_lists_comb <- df_lists_comb[!df_lists_comb$my_duplicated,]
         df_lists_comb$my_duplicated <- NULL
 
