@@ -1,9 +1,0 @@
-make shiny app
-
-functionality:
-receive input of attributes and levels
-return full list of profiles
-return fractional list of profiles
-return combinations of profiles for comparisons (shifting)
-check whether profile list allows for linear regression
-check whether profile combination list allows for logistic regression

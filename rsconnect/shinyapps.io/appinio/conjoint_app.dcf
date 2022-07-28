@@ -1,0 +1,11 @@
+name: conjoint_app
+title:
+username:
+account: appinio
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5125806
+bundleId: 5313652
+url: https://appinio.shinyapps.io/conjoint_app/
+when: 1638352315.34199
+lastSyncTime: 1638352315.34199
