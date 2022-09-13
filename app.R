@@ -44,41 +44,41 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                            
                            
                            #authentication https://towardsdatascience.com/r-shiny-authentication-incl-demo-app-a599b86c54f7
-                           tags$div(
-                             id = "login-basic", 
-                             style = "width: 500px; max-width: 100%; margin: 0 auto;",
-                             
-                             tags$div(
-                               class = "well",
-                               h4(class = "text-center", "Please login"),
-                               p(class = "text-center", 
-                                 tags$small("First approach login form")
-                               ),
-                               
-                               textInput(
-                                 inputId     = "ti_user_name_basic", 
-                                 label       = tagList(icon("user"), 
-                                                       "User Name"),
-                                 placeholder = "Enter user name"
-                               ),
-                               
-                               passwordInput(
-                                 inputId     = "ti_password_basic", 
-                                 label       = tagList(icon("unlock-alt"), 
-                                                       "Password"), 
-                                 placeholder = "Enter password"
-                               ), 
-                               
-                               tags$div(
-                                 class = "text-center",
-                                 actionButton(
-                                   inputId = "ab_login_button_basic", 
-                                   label = "Log in",
-                                   class = "btn-primary"
-                                 )
-                               )
-                             )
-                           ),
+                           # tags$div(
+                           #   id = "login-basic", 
+                           #   style = "width: 500px; max-width: 100%; margin: 0 auto;",
+                           #   
+                           #   tags$div(
+                           #     class = "well",
+                           #     h4(class = "text-center", "Please login"),
+                           #     p(class = "text-center", 
+                           #       tags$small("First approach login form")
+                           #     ),
+                           #     
+                           #     textInput(
+                           #       inputId     = "ti_user_name_basic", 
+                           #       label       = tagList(icon("user"), 
+                           #                             "User Name"),
+                           #       placeholder = "Enter user name"
+                           #     ),
+                           #     
+                           #     passwordInput(
+                           #       inputId     = "ti_password_basic", 
+                           #       label       = tagList(icon("unlock-alt"), 
+                           #                             "Password"), 
+                           #       placeholder = "Enter password"
+                           #     ), 
+                           #     
+                           #     tags$div(
+                           #       class = "text-center",
+                           #       actionButton(
+                           #         inputId = "ab_login_button_basic", 
+                           #         label = "Log in",
+                           #         class = "btn-primary"
+                           #       )
+                           #     )
+                           #   )
+                           # ),
                            tags$br(),
                            tags$br(),
                            tags$br(),
@@ -247,7 +247,7 @@ ui <- fluidPage(theme = shinytheme("cerulean"),
                            
                            splitLayout(cellWidths = c("70%", "30%"), DTOutput("utilitytable"),  plotOutput("market_pie")),
                            tags$br(),
-                           
+                           downloadButton(outputId = "marketsDL", label = "Download Market Simulations"),
                            downloadButton(outputId = "pptxdownload", label = "Download PPTX"),
                            downloadButton(outputId = "xlsxdownload", label = "Download Utilities for Excel")
                   ),
@@ -657,8 +657,48 @@ server <- function(input, output, session) {
     plotting_df = analysis()[[5]]
     market_simulator(selected_profiles, individuals_betas, plotting_df)})
   
-  #observeEvent(input$analysisstart, {
   
+  #download many market simulations
+  output$marketsDL <- downloadHandler(
+    filename = function() {
+      paste0("market_simulations", ".xlsx")
+    },
+    content = function(file) {
+      all_profiles = analysis()[[3]]
+      individuals_betas = analysis()[[4]]
+      plotting_df = analysis()[[5]]
+      output_matrix = c("Nr_products", "Included_products", paste0("Product", 1:nrow(all_profiles)))
+      withProgress(message = 'Simulating many markets', value = 0.5,{
+      for(market_size in c(1,2)){
+        print(market_size)
+        product_combi_indeces = t(combn(1:nrow(all_profiles), market_size))
+      for(i in 1:nrow(product_combi_indeces)){
+        product_combo = product_combi_indeces[i,]
+        
+        # print(product_combo)
+        selected_profiles = all_profiles[product_combo,]
+        # print("start")
+        market_shares = market_simulator_full(selected_profiles, individuals_betas, plotting_df, product_combo, all_profiles)
+        # print(market_shares)
+        # print(dim(market_shares))
+      output_matrix = rbind(output_matrix, c(length(product_combo), paste(product_combo, collapse = "&"), market_shares))
+      # print("end")
+      # print("")
+      }
+      }
+
+      #concatenate
+      })
+      wb = createWorkbook()
+      addWorksheet(wb, "Markets")
+      writeData(wb,"Markets", output_matrix)
+      addWorksheet(wb, "Products")
+      #colnames(all_profiles)[colnames(all_profiles == "Rank")] = "Product"
+      writeData(wb,"Products", all_profiles)
+      saveWorkbook(wb,file)
+    }
+  )
+
   
   
   # Download Plots as PPTX

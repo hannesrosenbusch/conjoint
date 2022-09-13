@@ -382,7 +382,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
 
 market_simulator = function(selected_profiles, betawrite, plotting_df){
   #market simulator
-  
+
   #selected_profiles = all_profiles[107,];betawrite = out$betawrite #for testing function outside app
   one_hot_vector = apply(selected_profiles, 1, function(x){plotting_df$all_levels %in% x})
   participant_scores = betawrite %*% one_hot_vector #none beta; out$betawrite
@@ -396,6 +396,36 @@ market_simulator = function(selected_profiles, betawrite, plotting_df){
       edges = 500,
       main = "Artificial market simulation")
 }
+
+
+
+
+
+market_simulator_full = function(selected_profiles, betawrite, plotting_df, product_combo, all_profiles){
+  
+  #market simulator
+  # print("hi")
+  #selected_profiles = all_profiles[107,];betawrite = out$betawrite #for testing function outside app
+  one_hot_vector = apply(selected_profiles, 1, function(x){plotting_df$all_levels %in% x})
+  # print("ho")
+  participant_scores = betawrite %*% one_hot_vector #none beta; out$betawrite
+  market_simulation = apply(participant_scores, 1, function(x){which.max(x)})
+  market_simulation = table(market_simulation)
+  # print("ha")
+  market_simulation = round(market_simulation / sum(market_simulation) * 100)
+  #names(market_simulation) = paste("Rank", selected_profiles$Rank)
+  output_vec = rep(0, nrow(all_profiles))
+  # print("he")
+  output_vec[unlist(product_combo)] = market_simulation
+  as.character(output_vec)
+}
+
+
+
+
+
+
+
 
 cust_choicemodelr <-function(data, xcoding, demos, prior, mcmc, constraints, options) {
   set.seed(42)
