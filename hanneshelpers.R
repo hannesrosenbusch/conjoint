@@ -21,7 +21,7 @@ resample_without_creating_duplicates = function(piles, three = T){
       set.seed(r_seed);best_pile3 = best_pile3[sample(nrow(best_pile3)),]
       duplicates_within_sets = any(rowSums(pile1==best_pile3) == ncol(pile1)) | any(rowSums(pile1==best_pile2) == ncol(pile1)) | any(rowSums(best_pile2==best_pile3) == ncol(pile1))
     }
-    
+
     randomized_piles = list(pile1, best_pile2, best_pile3)
   }else{
     while(duplicates_within_sets){
@@ -40,7 +40,7 @@ mix_match = function(pile1, third_pile = T){
   set.seed(42)
   
   pile1[] <- lapply(pile1, as.character)
-  
+
   #make pile2
   smallest_overlap = 99999
   pile2 = pile1
@@ -49,36 +49,28 @@ mix_match = function(pile1, third_pile = T){
     
     vals = unique(pile1[,column]) #removed sort
     perms = DescTools::Permn(vals)
-    
+
     for(p in 1:nrow(perms)){
       rec_vals = perms[p,]
       for(i in 1:length(vals)){
         
         pile2[pile1[column] == vals[i],column] = rec_vals[i]
       }
-      
+
       overlap = nrow(dplyr::intersect(pile1, pile2))
-      # print("overlap:")
-      # print(overlap)
-      # print("rows pile 1:")
-      # print(nrow(pile1))
-      # print("rows pile 2")
-      # print(nrow(pile2))
-      # inters=as.data.frame(intersect(pile1, pile2))
-      # print(inters)
-      # print(class(inters))
-      
+     
       if(overlap < smallest_overlap){smallest_overlap = overlap; best_pile2 = pile2}
       if(overlap == 0){break}
     }
   }
-  
+
   piles = list(pile1, best_pile2)
   
   #make pile 3
   if(third_pile){
     pile3 = pile2
     smallest_overlap = 99999
+    
     for(column in colnames(pile1)){
       vals = unique(pile1[,column]) #removed sort
       perms = DescTools::Permn(vals)
@@ -102,59 +94,59 @@ mix_match = function(pile1, third_pile = T){
 
 plot_set = function(sets, set_number = 1, profile_number, aest, decorpath, none_text, imgs){
   set.seed(42)
-  sets['Set'] = NULL
-  colnames(sets) = gsub('_a', '', colnames(sets));colnames(sets) = gsub('_b', '', colnames(sets));colnames(sets) = gsub('_c', '', colnames(sets))
-  
-  elements = sets[set_number, ((profile_number-1) * ncol(sets)/3 + 1):(profile_number * ncol(sets)/3)]
-  elements=elements[,order(ncol(elements):1)]
-  
-  if(sum(grepl("Image", colnames(elements))) > 0){
-    imgpath = imgs[elements$Image]
-    if(substr(imgpath, nchar(imgpath)-3, nchar(imgpath)) == ".png"){
-      pn = readPNG(imgpath)
-      g = rasterGrob(pn, interpolate=TRUE)
-    }else if(substr(imgpath, nchar(imgpath)-3, nchar(imgpath)) == ".jpg" | substr(imgpath, nchar(imgpath)-4, nchar(imgpath)) == ".jpeg"){
-      jp = readJPEG(imgpath)
-      g = rasterGrob(jp, interpolate=TRUE)
-    }else{stop("weird input format")}
-  }else if(!is.na(decorpath)){#this else if for imgs vs decor or let user overwrite?
-    if(substr(decorpath, nchar(decorpath)-3, nchar(decorpath)) == ".png"){
-      pn = readPNG(decorpath)
-      g = rasterGrob(pn, interpolate=TRUE)
-    }else if(substr(decorpath, nchar(decorpath)-3, nchar(decorpath)) == ".jpg" | substr(decorpath, nchar(decorpath)-4, nchar(decorpath)) == ".jpeg"){
-      jp = readJPEG(decorpath)
-      g = rasterGrob(jp, interpolate=TRUE)
-    }else{stop("weird input format")}
-  }else{g = NA}
-  
-  
-  colnames(elements) = paste0(colnames(elements), ":")
-  
-  profile_plot= ggplot() +  
-    geom_text(aes(x = aest['gap']/10, y = 1:ncol(elements),
-                  label = unlist(elements[1,]), hjust = 0,fontface = "bold"), size = aest['font_size_vals']) +
-    geom_text( aes(x = 0, y = 1:ncol(elements), 
-                   label = colnames(elements)), hjust = 1, size = aest['font_size_keys']) +
-    theme_bw()+ 
-    scale_y_continuous(breaks = NULL, limits = c(-1*aest['bottom_buffer'],ncol(elements)+1+aest['top_buffer'])) + 
-    scale_x_continuous(breaks = NULL, limits = c( -0.6- aest['left_buffer'],1 )) + 
-    theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
-    {
-      if(!all(is.na(g))){annotation_custom(g, xmin=aest['left_pic'], xmax=aest['right_pic'], ymin=aest['bottom_pic'], ymax=aest['top_pic'])}
-    }
-  
-  
-  
-  none_plot = ggplot() +  
-    geom_text(aes(x = 0, y = 2, 
-                  label = none_text, fontface = "bold"), size = aest['font_size_vals']) +
-    theme_bw()+ 
-    scale_y_continuous(breaks = NULL, limits = c(0,4)) + 
-    scale_x_continuous(breaks = NULL, limits = c(-1,1)) + 
-    theme(axis.title.x = element_blank(), axis.title.y = element_blank()) 
-  
-  list(profile_plot,none_plot)
-  
+sets['Set'] = NULL
+colnames(sets) = gsub('_a', '', colnames(sets));colnames(sets) = gsub('_b', '', colnames(sets));colnames(sets) = gsub('_c', '', colnames(sets))
+
+elements = sets[set_number, ((profile_number-1) * ncol(sets)/3 + 1):(profile_number * ncol(sets)/3)]
+elements=elements[,order(ncol(elements):1)]
+
+if(sum(grepl("Image", colnames(elements))) > 0){
+  imgpath = imgs[elements$Image]
+  if(substr(imgpath, nchar(imgpath)-3, nchar(imgpath)) == ".png"){
+    pn = readPNG(imgpath)
+    g = rasterGrob(pn, interpolate=TRUE)
+  }else if(substr(imgpath, nchar(imgpath)-3, nchar(imgpath)) == ".jpg" | substr(imgpath, nchar(imgpath)-4, nchar(imgpath)) == ".jpeg"){
+    jp = readJPEG(imgpath)
+    g = rasterGrob(jp, interpolate=TRUE)
+  }else{stop("weird input format")}
+}else if(!is.na(decorpath)){#this else if for imgs vs decor or let user overwrite?
+ if(substr(decorpath, nchar(decorpath)-3, nchar(decorpath)) == ".png"){
+   pn = readPNG(decorpath)
+   g = rasterGrob(pn, interpolate=TRUE)
+ }else if(substr(decorpath, nchar(decorpath)-3, nchar(decorpath)) == ".jpg" | substr(decorpath, nchar(decorpath)-4, nchar(decorpath)) == ".jpeg"){
+  jp = readJPEG(decorpath)
+  g = rasterGrob(jp, interpolate=TRUE)
+ }else{stop("weird input format")}
+}else{g = NA}
+
+
+colnames(elements) = paste0(colnames(elements), ":")
+
+profile_plot= ggplot() +  
+  geom_text(aes(x = aest['gap']/10, y = 1:ncol(elements),
+                label = unlist(elements[1,]), hjust = 0,fontface = "bold"), size = aest['font_size_vals']) +
+  geom_text( aes(x = 0, y = 1:ncol(elements), 
+                label = colnames(elements)), hjust = 1, size = aest['font_size_keys']) +
+  theme_bw()+ 
+  scale_y_continuous(breaks = NULL, limits = c(-1*aest['bottom_buffer'],ncol(elements)+1+aest['top_buffer'])) + 
+  scale_x_continuous(breaks = NULL, limits = c( -0.6- aest['left_buffer'],1 )) + 
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
+  {
+    if(!all(is.na(g))){annotation_custom(g, xmin=aest['left_pic'], xmax=aest['right_pic'], ymin=aest['bottom_pic'], ymax=aest['top_pic'])}
+  }
+
+
+
+none_plot = ggplot() +  
+  geom_text(aes(x = 0, y = 2, 
+                label = none_text, fontface = "bold"), size = aest['font_size_vals']) +
+  theme_bw()+ 
+  scale_y_continuous(breaks = NULL, limits = c(0,4)) + 
+  scale_x_continuous(breaks = NULL, limits = c(-1,1)) + 
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) 
+
+list(profile_plot,none_plot)
+
 }
 
 
@@ -174,7 +166,8 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   
   df$y = match(df$y, letters)
   df$answer = NULL
-
+  print(nrow(key))
+  print(nrow(df))
   df$set = rep(1:nrow(key), nrow(df)/nrow(key))
   #set.seed(42); df$y[is.na(df$y)] = apply(df[is.na(df$y),] ,1, function(x){sample(df$y[!is.na(df$y) & df$set == x['set']], 1)})
   
@@ -196,6 +189,9 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
   profile = sort(rep(1:nr_profiles, nrow(key)))
   print("C")
   #put profiles of same set underneath each other (long format)
+  print(nr_attributes)
+  print(nr_profiles)
+  print(ncol(key))
   A_key = key[,1:nr_attributes]
   print("C1")
   B_key = key[,(nr_attributes +1): (2* nr_attributes)]
@@ -262,6 +258,10 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
     all_levels = c(all_levels, attr_levels)
     prev_index = cumu_nr_levels[i]}
   print("K")
+  cluster_colnames = reactiveVal()
+  tester = paste(all_attributes, all_levels,collapse="_")
+  cluster_colnames(tester)
+ 
   if(none_option){all_attributes = c(all_attributes, "None"); importance = c(importance, betas[length(betas)]); all_levels = c(all_levels, "None")}
   
   
@@ -382,7 +382,7 @@ importance_utility_ranking = function(df, key, nr_profiles, none_option){
 
 market_simulator = function(selected_profiles, betawrite, plotting_df){
   #market simulator
-
+  
   #selected_profiles = all_profiles[107,];betawrite = out$betawrite #for testing function outside app
   one_hot_vector = apply(selected_profiles, 1, function(x){plotting_df$all_levels %in% x})
   participant_scores = betawrite %*% one_hot_vector #none beta; out$betawrite
@@ -396,36 +396,6 @@ market_simulator = function(selected_profiles, betawrite, plotting_df){
       edges = 500,
       main = "Artificial market simulation")
 }
-
-
-
-
-
-market_simulator_full = function(selected_profiles, betawrite, plotting_df, product_combo, all_profiles){
-  
-  #market simulator
-  # print("hi")
-  #selected_profiles = all_profiles[107,];betawrite = out$betawrite #for testing function outside app
-  one_hot_vector = apply(selected_profiles, 1, function(x){plotting_df$all_levels %in% x})
-  # print("ho")
-  participant_scores = betawrite %*% one_hot_vector #none beta; out$betawrite
-  market_simulation = apply(participant_scores, 1, function(x){which.max(x)})
-  market_simulation = table(market_simulation)
-  # print("ha")
-  market_simulation = round(market_simulation / sum(market_simulation) * 100)
-  #names(market_simulation) = paste("Rank", selected_profiles$Rank)
-  output_vec = rep(0, nrow(all_profiles))
-  # print("he")
-  output_vec[unlist(product_combo)] = market_simulation
-  as.character(output_vec)
-}
-
-
-
-
-
-
-
 
 cust_choicemodelr <-function(data, xcoding, demos, prior, mcmc, constraints, options) {
   set.seed(42)
@@ -1223,26 +1193,26 @@ current_and_alternative_designs = function(data){
     colnames(current) = c("Design", "#Sets")
     return(list(current,NULL, "Good design!"))
   }else{
-    
-    
-    if(current_design %in% names(all_designchecks)){
-      
-      coded_dcheck = strsplit(names(all_designchecks), "x")
-      integer_dcheck = lapply(coded_dcheck,  as.integer)
-      better_designs = as.data.frame(unlist(all_designchecks[which(unlist(lapply(integer_dcheck, bigger_design, current_design = current_design)) & all_designchecks <= 48)]))
-      better_designs = cbind(rownames(better_designs), better_designs)#
-      colnames(better_designs) = c("Design", "#Sets")
-      if(all_designchecks[current_design] <= 32){
-        message = "Good design!" 
-      }else if(nrow(better_designs) > 0){
-        message = "Larger, optimized designs available!"
-      }else{message = "Design size threatens data quality"}
-      current = as.data.frame(all_designchecks[current_design])
-      current = cbind(names(all_designchecks[current_design]), as.integer(all_designchecks[current_design]))
-      colnames(current) = c("Design", "#Sets")
-      return(list(current,better_designs, message))
-    }else{return(list(NULL, NULL, "Questionable design size"))}
-  }}
+
+  
+  if(current_design %in% names(all_designchecks)){
+
+    coded_dcheck = strsplit(names(all_designchecks), "x")
+    integer_dcheck = lapply(coded_dcheck,  as.integer)
+    better_designs = as.data.frame(unlist(all_designchecks[which(unlist(lapply(integer_dcheck, bigger_design, current_design = current_design)) & all_designchecks <= 48)]))
+    better_designs = cbind(rownames(better_designs), better_designs)#
+    colnames(better_designs) = c("Design", "#Sets")
+    if(all_designchecks[current_design] <= 32){
+      message = "Good design!" 
+    }else if(nrow(better_designs) > 0){
+      message = "Larger, optimized designs available!"
+    }else{message = "Design size threatens data quality"}
+    current = as.data.frame(all_designchecks[current_design])
+    current = cbind(names(all_designchecks[current_design]), as.integer(all_designchecks[current_design]))
+    colnames(current) = c("Design", "#Sets")
+    return(list(current,better_designs, message))
+  }else{return(list(NULL, NULL, "Questionable design size"))}
+}}
 
 removeListElemComplete = function(inlist, elem_remove) {
   removeListElem <- function(inlist,elem_remove){
